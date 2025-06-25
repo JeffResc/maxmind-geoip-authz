@@ -23,7 +23,11 @@ func TestIsPrivateIP(t *testing.T) {
 		{"172.16.5.4", true},
 		{"192.168.1.1", true},
 		{"127.0.0.1", true},
+		{"::1", true},
+		{"fc00::1", true},
+		{"fe80::1", true},
 		{"8.8.8.8", false},
+		{"2001:4860:4860::8888", false},
 	}
 	for _, c := range cases {
 		if IsPrivateIP(net.ParseIP(c.ip)) != c.expect {
