@@ -15,8 +15,6 @@ var (
 	openGeoDBFn    = geoip.Open
 	listenAndServe = http.ListenAndServe
 	config         cfg.Config
-	licenseKey     string
-	accountID		string
 )
 
 // run initializes resources and starts the HTTP server. It is separated from
@@ -39,5 +37,7 @@ func serve() error {
 }
 
 func main() {
-	execute()
+	if err := serve(); err != nil {
+		log.Fatal(err)
+	}
 }
