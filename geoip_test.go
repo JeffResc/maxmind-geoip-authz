@@ -9,7 +9,7 @@ import (
 )
 
 func TestOpenGeoDBFailure(t *testing.T) {
-	if _, err := OpenGeoDB("/nonexistent/path.mmdb"); err == nil {
+	if _, err := openGeoDB("/nonexistent/path.mmdb"); err == nil {
 		t.Fatal("expected error for missing DB")
 	}
 }
@@ -26,7 +26,7 @@ func TestIsPrivateIP(t *testing.T) {
 		{"8.8.8.8", false},
 	}
 	for _, c := range cases {
-		if IsPrivateIP(net.ParseIP(c.ip)) != c.expect {
+		if isPrivateIP(net.ParseIP(c.ip)) != c.expect {
 			t.Fatalf("IsPrivateIP(%s) expected %v", c.ip, c.expect)
 		}
 	}
@@ -42,7 +42,7 @@ func TestLookupCountry(t *testing.T) {
 		return rec, nil
 	}
 
-	if c := LookupCountry(net.ParseIP("1.2.3.4")); c != "US" {
+	if c := lookupCountry(net.ParseIP("1.2.3.4")); c != "US" {
 		t.Fatalf("expected US, got %s", c)
 	}
 }
@@ -55,7 +55,7 @@ func TestLookupCountryUnknown(t *testing.T) {
 		return &geoip2.Country{}, nil
 	}
 
-	if c := LookupCountry(net.ParseIP("1.2.3.4")); c != "UNKNOWN" {
+	if c := lookupCountry(net.ParseIP("1.2.3.4")); c != "UNKNOWN" {
 		t.Fatalf("expected UNKNOWN, got %s", c)
 	}
 }
@@ -68,7 +68,7 @@ func TestLookupCountryError(t *testing.T) {
 		return nil, errors.New("bad")
 	}
 
-	if c := LookupCountry(net.ParseIP("1.2.3.4")); c != "UNKNOWN" {
+	if c := lookupCountry(net.ParseIP("1.2.3.4")); c != "UNKNOWN" {
 		t.Fatalf("expected UNKNOWN on error, got %s", c)
 	}
 }

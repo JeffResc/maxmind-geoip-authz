@@ -28,15 +28,15 @@ maxmind_edition_id: "GeoLite2-Country"
 	defer os.Chdir(cwd)
 
 	calledDownload := false
-	downloadGeoIPDBIfUpdated = func() { calledDownload = true }
-	defer func() { downloadGeoIPDBIfUpdated = DownloadGeoIPDBIfUpdated }()
+	downloadGeoIPDBIfUpdatedFn = func() { calledDownload = true }
+	defer func() { downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated }()
 
 	var openPath string
 	openGeoDBFn = func(path string) (*geoip2.Reader, error) {
 		openPath = path
 		return nil, nil
 	}
-	defer func() { openGeoDBFn = OpenGeoDB }()
+	defer func() { openGeoDBFn = openGeoDB }()
 
 	served := false
 	listenAndServe = func(addr string, h http.Handler) error {
@@ -78,13 +78,13 @@ maxmind_edition_id: "GeoLite2-Country"
 	defer os.Chdir(cwd)
 
 	openGeoDBFn = func(path string) (*geoip2.Reader, error) { return nil, fmt.Errorf("bad") }
-	defer func() { openGeoDBFn = OpenGeoDB }()
+	defer func() { openGeoDBFn = openGeoDB }()
 
 	listenAndServe = func(addr string, h http.Handler) error { return nil }
 	defer func() { listenAndServe = http.ListenAndServe }()
 
-	downloadGeoIPDBIfUpdated = func() {}
-	defer func() { downloadGeoIPDBIfUpdated = DownloadGeoIPDBIfUpdated }()
+	downloadGeoIPDBIfUpdatedFn = func() {}
+	defer func() { downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated }()
 
 	if err := serve(); err == nil {
 		t.Fatalf("expected error from run when openGeoDB fails")
