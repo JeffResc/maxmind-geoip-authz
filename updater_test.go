@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	cfg "github.com/jeffresc/maxmind-geoip-authz/config"
 )
 
 // helper RoundTripper to mock HTTP responses
@@ -33,7 +35,7 @@ func TestDownloadGeoIPDBIfUpdated_NoUpdate(t *testing.T) {
 	os.Remove("/tmp/geoip.zip")
 
 	tmpDir := t.TempDir()
-	config = Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb"), MaxMindEditionID: "test"}
+	config = cfg.Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb"), MaxMindEditionID: "test"}
 	licenseKey = "lic"
 
 	// create existing DB file to trigger If-Modified-Since header
@@ -67,7 +69,7 @@ func TestDownloadGeoIPDBIfUpdated_Downloads(t *testing.T) {
 	os.Remove("/tmp/geoip.zip")
 
 	tmpDir := t.TempDir()
-	config = Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb"), MaxMindEditionID: "test"}
+	config = cfg.Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb"), MaxMindEditionID: "test"}
 	licenseKey = "lic"
 
 	mmdbContent := []byte("dummydb")
@@ -94,7 +96,7 @@ func TestDownloadGeoIPDBIfUpdated_Downloads(t *testing.T) {
 
 func TestExtractAndSwapDB_NoMMDB(t *testing.T) {
 	tmpDir := t.TempDir()
-	config = Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb")}
+	config = cfg.Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb")}
 
 	zipPath := filepath.Join(tmpDir, "test.zip")
 	buf, _ := os.Create(zipPath)

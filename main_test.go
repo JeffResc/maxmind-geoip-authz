@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jeffresc/maxmind-geoip-authz/geoip"
 	"github.com/oschwald/geoip2-golang"
 )
 
@@ -36,7 +37,7 @@ maxmind_edition_id: "GeoLite2-Country"
 		openPath = path
 		return nil, nil
 	}
-	defer func() { openGeoDBFn = openGeoDB }()
+	defer func() { openGeoDBFn = geoip.Open }()
 
 	served := false
 	listenAndServe = func(addr string, h http.Handler) error {
@@ -78,7 +79,7 @@ maxmind_edition_id: "GeoLite2-Country"
 	defer os.Chdir(cwd)
 
 	openGeoDBFn = func(path string) (*geoip2.Reader, error) { return nil, fmt.Errorf("bad") }
-	defer func() { openGeoDBFn = openGeoDB }()
+	defer func() { openGeoDBFn = geoip.Open }()
 
 	listenAndServe = func(addr string, h http.Handler) error { return nil }
 	defer func() { listenAndServe = http.ListenAndServe }()

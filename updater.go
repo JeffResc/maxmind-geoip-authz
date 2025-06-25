@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jeffresc/maxmind-geoip-authz/geoip"
 	"github.com/oschwald/geoip2-golang"
 )
 
@@ -62,13 +63,13 @@ func extractAndSwapDB(zipPath string) {
 			io.Copy(outFile, rc)
 			outFile.Close()
 
-			dbLock.Lock()
-			if geoDB != nil {
-				geoDB.Close()
+			geoip.DBLock.Lock()
+			if geoip.DB != nil {
+				geoip.DB.Close()
 			}
-			geoDB, _ = geoip2.Open(tmpDB)
+			geoip.DB, _ = geoip2.Open(tmpDB)
 			os.Rename(tmpDB, config.GeoIPDBPath)
-			dbLock.Unlock()
+			geoip.DBLock.Unlock()
 
 			if config.Debug {
 				log.Printf("GeoIP DB updated successfully")

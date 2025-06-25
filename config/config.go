@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"log"
@@ -20,10 +20,8 @@ type Config struct {
 	MaxMindEditionID      string   `yaml:"maxmind_edition_id"`
 }
 
-var config Config
-var accountID, licenseKey string
-
-func loadConfig(path string) Config {
+// Load reads configuration from the given YAML file and returns a Config.
+func Load(path string) Config {
 	v := viper.New()
 	v.SetConfigFile(path)
 	if err := v.ReadInConfig(); err != nil {
@@ -39,7 +37,9 @@ func loadConfig(path string) Config {
 	return c
 }
 
-func loadMaxMindCredentials(accountPath, licensePath string) (string, string) {
+// LoadMaxMindCredentials reads the MaxMind account ID and license key from the
+// provided files.
+func LoadMaxMindCredentials(accountPath, licensePath string) (string, string) {
 	accData, err := os.ReadFile(accountPath)
 	if err != nil {
 		log.Fatalf("Failed to read MaxMind Account ID: %v", err)
