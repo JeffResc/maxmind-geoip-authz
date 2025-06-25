@@ -8,62 +8,66 @@ import (
 	"strings"
 )
 
+// lookupCountry is used by AuthzHandler to determine the requester's country.
+// It points to LookupCountry by default but can be overridden in tests.
+var lookupCountry = LookupCountry
+
 func AuthzHandler(w http.ResponseWriter, r *http.Request) {
-    ip := ExtractClientIP(r)
-    parsedIP := net.ParseIP(ip)
-    if parsedIP == nil {
-        deny(w, "Invalid IP")
-        return
-    }
+	ip := ExtractClientIP(r)
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		deny(w, "Invalid IP")
+		return
+	}
 
-    if config.Debug {
-        log.Printf("Request from IP: %s", ip)
-    }
+	if config.Debug {
+		log.Printf("Request from IP: %s", ip)
+	}
 
-    if IsPrivateIP(parsedIP) && config.BlockPrivateIPs {
-        deny(w, "Private IP blocked")
-        return
-    }
+	if IsPrivateIP(parsedIP) && config.BlockPrivateIPs {
+		deny(w, "Private IP blocked")
+		return
+	}
 
-    countryCode := LookupCountry(parsedIP)
-    if config.Debug {
-        log.Printf("Resolved Country: %s", countryCode)
-    }
+	countryCode := lookupCountry(parsedIP)
+	if config.Debug {
+		log.Printf("Resolved Country: %s", countryCode)
+	}
 
-    inList := StringInSlice(countryCode, config.Countries)
-    if (config.Mode == "allowlist" && !inList) || (config.Mode == "blocklist" && inList) {
-        deny(w, "Country policy blocked")
-        return
-    }
+	inList := StringInSlice(countryCode, config.Countries)
+	if (config.Mode == "allowlist" && !inList) || (config.Mode == "blocklist" && inList) {
+		deny(w, "Country policy blocked")
+		return
+	}
 
-    allow(w)
+	allow(w)
 }
 
 func ExtractClientIP(r *http.Request) string {
-    forwarded := r.Header.Get("X-Forwarded-For")
-    if forwarded != "" {
-        parts := strings.Split(forwarded, ",")
-        return strings.TrimSpace(parts[0])
-    }
-    host, _, _ := net.SplitHostPort(r.RemoteAddr)
-    return host
+	forwarded := r.Header.Get("X-Forwarded-For")
+	if forwarded != "" {
+		parts := strings.Split(forwarded, ",")
+		return strings.TrimSpace(parts[0])
+	}
+	host, _, _ := net.SplitHostPort(r.RemoteAddr)
+	return host
 }
 
 func deny(w http.ResponseWriter, msg string) {
-    w.WriteHeader(http.StatusForbidden)
-    json.NewEncoder(w).Encode(map[string]string{"status": "denied", "reason": msg})
+	w.WriteHeader(http.StatusForbidden)
+	json.NewEncoder(w).Encode(map[string]string{"status": "denied", "reason": msg})
 }
 
 func allow(w http.ResponseWriter) {
-    w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode(map[string]string{"status": "allowed"})
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "allowed"})
 }
 
 func StringInSlice(val string, list []string) bool {
-    for _, item := range list {
-        if strings.EqualFold(val, item) {
-            return true
-        }
-    }
-    return false
+	for _, item := range list {
+		if strings.EqualFold(val, item) {
+			return true
+		}
+	}
+	return false
 }
