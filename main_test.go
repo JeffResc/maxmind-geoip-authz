@@ -11,21 +11,13 @@ import (
 )
 
 func TestServeStartsServer(t *testing.T) {
-	// create temp directory for config and credentials
+	// create temp directory for config
 	dir := t.TempDir()
 
-	// create dummy credentials
-	accFile := filepath.Join(dir, "acc")
-	licFile := filepath.Join(dir, "lic")
-	os.WriteFile(accFile, []byte("id"), 0o600)
-	os.WriteFile(licFile, []byte("key"), 0o600)
-
-	// create config
+	// create config without MaxMind credentials
 	cfg := `mode: "blocklist"
 geoip_db_path: "db.mmdb"
 listen_addr: ":1234"
-maxmind_account_id_file: "` + accFile + `"
-maxmind_license_key_file: "` + licFile + `"
 maxmind_edition_id: "GeoLite2-Country"
 `
 	os.WriteFile(filepath.Join(dir, "config.yaml"), []byte(cfg), 0o600)
@@ -74,16 +66,9 @@ maxmind_edition_id: "GeoLite2-Country"
 func TestServeOpenGeoDBError(t *testing.T) {
 	dir := t.TempDir()
 
-	accFile := filepath.Join(dir, "acc")
-	licFile := filepath.Join(dir, "lic")
-	os.WriteFile(accFile, []byte("id"), 0o600)
-	os.WriteFile(licFile, []byte("key"), 0o600)
-
 	cfg := `mode: "blocklist"
 geoip_db_path: "db.mmdb"
 listen_addr: ":0"
-maxmind_account_id_file: "` + accFile + `"
-maxmind_license_key_file: "` + licFile + `"
 maxmind_edition_id: "GeoLite2-Country"
 `
 	os.WriteFile(filepath.Join(dir, "config.yaml"), []byte(cfg), 0o600)
