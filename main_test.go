@@ -28,10 +28,6 @@ maxmind_edition_id: "GeoLite2-Country"
 	os.Chdir(dir)
 	defer os.Chdir(cwd)
 
-	calledDownload := false
-	downloadGeoIPDBIfUpdatedFn = func() { calledDownload = true }
-	defer func() { downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated }()
-
 	var openPath string
 	openGeoDBFn = func(path string) (*geoip2.Reader, error) {
 		openPath = path
@@ -53,9 +49,6 @@ maxmind_edition_id: "GeoLite2-Country"
 		t.Fatalf("serve returned error: %v", err)
 	}
 
-	if calledDownload {
-		t.Errorf("download function should not be called")
-	}
 	if openPath != "db.mmdb" {
 		t.Errorf("openGeoDB path = %s", openPath)
 	}
@@ -83,9 +76,6 @@ maxmind_edition_id: "GeoLite2-Country"
 
 	listenAndServe = func(addr string, h http.Handler) error { return nil }
 	defer func() { listenAndServe = http.ListenAndServe }()
-
-	downloadGeoIPDBIfUpdatedFn = func() {}
-	defer func() { downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated }()
 
 	if err := serve(); err == nil {
 		t.Fatalf("expected error from run when openGeoDB fails")

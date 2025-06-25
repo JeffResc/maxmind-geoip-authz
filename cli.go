@@ -30,7 +30,7 @@ var updateDBCmd = &cobra.Command{
 	Short: "Update the GeoIP database",
 	Run: func(cmd *cobra.Command, args []string) {
 		config = cfg.Load("config.yaml")
-		accountID, licenseKey = cfg.LoadMaxMindCredentials(
+		_, licenseKey = cfg.LoadMaxMindCredentials(
 			config.MaxMindAccountIDFile,
 			config.MaxMindLicenseKeyFile,
 		)
