@@ -1,4 +1,4 @@
-package config
+package main
 
 import (
 	"io/ioutil"
@@ -30,7 +30,7 @@ debug: true
 		t.Fatal(err)
 	}
 
-	c := Load(tmp.Name())
+	c := loadConfig(tmp.Name())
 	if c.Mode != "allowlist" || !c.BlockPrivateIPs || c.ListenAddr != ":8080" {
 		t.Fatalf("unexpected config: %#v", c)
 	}
@@ -53,7 +53,7 @@ func TestLoadConfigInvalidMode(t *testing.T) {
 			t.Fatal(err)
 		}
 		tmp.Close()
-		Load(tmp.Name())
+		loadConfig(tmp.Name())
 		return
 	}
 
