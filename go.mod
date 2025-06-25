@@ -5,7 +5,7 @@ go 1.24.4
 require (
         github.com/oschwald/geoip2-golang v1.11.0
         gopkg.in/yaml.v2 v2.4.0
-        github.com/spf13/viper v0.0.0
+        github.com/spf13/viper v1.20.1
 )
 
 replace github.com/spf13/viper => ./viper
