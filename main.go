@@ -18,10 +18,6 @@ var (
 // main so tests can exercise the startup logic without exiting the process.
 func serve() error {
 	config = LoadConfig("config.yaml")
-	accountID, licenseKey = LoadMaxMindCredentials(
-		config.MaxMindAccountIDFile,
-		config.MaxMindLicenseKeyFile,
-	)
 
 	var err error
 	geoDB, err = openGeoDBFn(config.GeoIPDBPath)
