@@ -31,7 +31,11 @@ func DownloadGeoIPDBIfUpdated() {
 	)
 
 	tmpFile := "/tmp/geoip.zip"
-	req, _ := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Printf("Failed to create request: %v", err)
+		return
+	}
 
 	if fi, err := os.Stat(config.GeoIPDBPath); err == nil {
 		req.Header.Set("If-Modified-Since", fi.ModTime().UTC().Format(http.TimeFormat))
@@ -39,6 +43,7 @@ func DownloadGeoIPDBIfUpdated() {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		log.Printf("Failed to download GeoIP DB: %v", err)
 		return
 	}
 	if resp.StatusCode == http.StatusNotModified {
@@ -50,9 +55,20 @@ func DownloadGeoIPDBIfUpdated() {
 	}
 	defer resp.Body.Close()
 
-	out, _ := os.Create(tmpFile)
-	io.Copy(out, resp.Body)
-	out.Close()
+	out, err := os.Create(tmpFile)
+	if err != nil {
+		log.Printf("Failed to create temp file: %v", err)
+		return
+	}
+	if _, err := io.Copy(out, resp.Body); err != nil {
+		log.Printf("Failed to save GeoIP DB: %v", err)
+		out.Close()
+		return
+	}
+	if err := out.Close(); err != nil {
+		log.Printf("Failed to close temp file: %v", err)
+		return
+	}
 
 	extractAndSwapDB(tmpFile)
 }
@@ -67,19 +83,44 @@ func extractAndSwapDB(zipPath string) {
 
 	for _, f := range r.File {
 		if strings.HasSuffix(f.Name, ".mmdb") {
-			rc, _ := f.Open()
+			rc, err := f.Open()
+			if err != nil {
+				log.Printf("Failed to open file in archive: %v", err)
+				return
+			}
 			defer rc.Close()
+
 			tmpDB := config.GeoIPDBPath + ".tmp"
-			outFile, _ := os.Create(tmpDB)
-			io.Copy(outFile, rc)
-			outFile.Close()
+			outFile, err := os.Create(tmpDB)
+			if err != nil {
+				log.Printf("Failed to create temp DB: %v", err)
+				return
+			}
+			if _, err := io.Copy(outFile, rc); err != nil {
+				log.Printf("Failed to write temp DB: %v", err)
+				outFile.Close()
+				return
+			}
+			if err := outFile.Close(); err != nil {
+				log.Printf("Failed to close temp DB: %v", err)
+				return
+			}
 
 			dbLock.Lock()
 			if geoDB != nil {
 				geoDB.Close()
 			}
-			geoDB, _ = geoip2.Open(tmpDB)
-			os.Rename(tmpDB, config.GeoIPDBPath)
+			newDB, err := geoip2.Open(tmpDB)
+			if err != nil {
+				log.Printf("Failed to open new DB: %v", err)
+			} else {
+				geoDB = newDB
+			}
+			if err := os.Rename(tmpDB, config.GeoIPDBPath); err != nil {
+				dbLock.Unlock()
+				log.Printf("Failed to move DB into place: %v", err)
+				return
+			}
 			dbLock.Unlock()
 
 			if config.Debug {
