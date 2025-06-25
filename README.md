@@ -25,7 +25,7 @@ mode: "blocklist"
 countries:
   - "CN"
   - "RU"
-allow_private_ips: false
+private_ip_action: deny
 unknown_action: allow
 geoip_db_path: "/app/GeoLite2-Country.mmdb"
 listen_addr: ":8080"
@@ -35,9 +35,8 @@ debug: false
 - **mode** – `allowlist` or `blocklist` to control how the `countries` list is
   interpreted.
 - **countries** – list of ISO country codes.
-- **allow_private_ips** – when `true`, requests from private IP ranges are
-  allowed without GeoIP checks. When `false`, private IPs are always denied.
-  IPv6 ranges such as `::1`, `fc00::/7`, and `fe80::/10` are considered
+- **private_ip_action** – `allow` or `deny` requests originating from private IP
+  ranges. IPv6 ranges such as `::1`, `fc00::/7`, and `fe80::/10` are considered
   private.
 - **unknown_action** – `allow` or `deny` requests when the country cannot be determined.
 - **geoip_db_path** – path to the MaxMind GeoIP2 country database.

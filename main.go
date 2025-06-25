@@ -31,6 +31,12 @@ func loadConfig(path string) cfg.Config {
 	if c.Mode != "allowlist" && c.Mode != "blocklist" {
 		log.Fatalf("Invalid mode: %s", c.Mode)
 	}
+	if c.PrivateIPAction == "" {
+		c.PrivateIPAction = "deny"
+	}
+	if c.PrivateIPAction != "allow" && c.PrivateIPAction != "deny" {
+		log.Fatalf("Invalid private_ip_action: %s", c.PrivateIPAction)
+	}
 	if c.UnknownAction == "" {
 		if c.Mode == "allowlist" {
 			c.UnknownAction = "deny"
