@@ -1,0 +1,47 @@
+{{- if and .Values.geoipupdate.enabled .Values.geoipupdate.runOnInstall }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "maxmind-geoip-authz.fullname" . }}-geoipupdate
+  labels:
+    {{- include "maxmind-geoip-authz.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "maxmind-geoip-authz.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: geoipupdate
+          image: "{{ .Values.geoipupdate.image.repository }}:{{ .Values.geoipupdate.image.tag }}"
+          imagePullPolicy: {{ .Values.geoipupdate.image.pullPolicy }}
+          env:
+            {{- if .Values.geoipupdate.credentials.existingSecret }}
+            - name: GEOIPUPDATE_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.geoipupdate.credentials.existingSecret }}
+                  key: accountID
+            - name: GEOIPUPDATE_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.geoipupdate.credentials.existingSecret }}
+                  key: licenseKey
+            {{- else }}
+            - name: GEOIPUPDATE_ACCOUNT_ID
+              value: {{ .Values.geoipupdate.credentials.accountID | quote }}
+            - name: GEOIPUPDATE_LICENSE_KEY
+              value: {{ .Values.geoipupdate.credentials.licenseKey | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: geoip-db
+              mountPath: {{ .Values.geoipDatabase.mountPath }}
+      volumes:
+        - name: geoip-db
+          persistentVolumeClaim:
+            claimName: {{ default (include "maxmind-geoip-authz.fullname" .) .Values.geoipDatabase.pvc.existingClaim }}
+{{- end }}

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "maxmind-geoip-authz.fullname" . }}
+  labels:
+    {{- include "maxmind-geoip-authz.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    mode: {{ .Values.config.mode | quote }}
+    countries:
+    {{- range .Values.config.countries }}
+      - {{ . | quote }}
+    {{- end }}
+    private_ip_action: {{ .Values.config.private_ip_action }}
+    unknown_action: {{ .Values.config.unknown_action }}
+    {{- $db := .Values.config.geoip_db_path | default (printf "%s/%s" .Values.geoipDatabase.mountPath .Values.geoipDatabase.dbFilename) }}
+    geoip_db_path: {{ $db | quote }}
+    listen_addr: {{ .Values.config.listen_addr | quote }}
+    debug: {{ .Values.config.debug }}

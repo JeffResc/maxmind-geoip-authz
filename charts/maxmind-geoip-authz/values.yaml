@@ -1,0 +1,90 @@
+# Default values for maxmind-geoip-authz.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/jeffresc/maxmind-geoip-authz
+  pullPolicy: IfNotPresent
+  tag: "0.1.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podLabels: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+config:
+  mode: "blocklist"
+  countries:
+    - "CN"
+    - "RU"
+  private_ip_action: deny
+  unknown_action: allow
+  geoip_db_path: ""
+  listen_addr: ":8080"
+  debug: false
+
+geoipDatabase:
+  mountPath: /data
+  dbFilename: GeoLite2-Country.mmdb
+  pvc:
+    existingClaim: ""
+    storageClassName: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+
+geoipupdate:
+  enabled: false
+  runOnInstall: false
+  schedule: "0 0 * * *"
+  image:
+    repository: ghcr.io/maxmind/geoipupdate
+    tag: v7.1.0
+    pullPolicy: IfNotPresent
+  credentials:
+    accountID: ""
+    licenseKey: ""
+    existingSecret: ""

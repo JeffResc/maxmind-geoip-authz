@@ -1,0 +1,17 @@
+{{- if not .Values.geoipDatabase.pvc.existingClaim }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "maxmind-geoip-authz.fullname" . }}
+  labels:
+    {{- include "maxmind-geoip-authz.labels" . | nindent 4 }}
+spec:
+  accessModes:
+{{ toYaml .Values.geoipDatabase.pvc.accessModes | indent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.geoipDatabase.pvc.size }}
+  {{- if .Values.geoipDatabase.pvc.storageClassName }}
+  storageClassName: {{ .Values.geoipDatabase.pvc.storageClassName }}
+  {{- end }}
+{{- end }}

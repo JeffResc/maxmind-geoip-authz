@@ -1,0 +1,13 @@
+# Patterns to ignore when building packages.
+# This supports shell glob matching, relative path matching, and
+# negation (prefixed with !). Patterns are evaluated in order.
+.DS_Store
+*.swp
+*.bak
+*.tmp
+*.orig
+*.tgz
+*.log
+charts/
+Chart.lock
+
