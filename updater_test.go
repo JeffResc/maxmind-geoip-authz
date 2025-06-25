@@ -49,7 +49,7 @@ func TestDownloadGeoIPDBIfUpdated_NoUpdate(t *testing.T) {
 	}))
 	defer restore()
 
-	DownloadGeoIPDBIfUpdated()
+	downloadGeoIPDBIfUpdated()
 
 	if !headerSeen {
 		t.Fatalf("If-Modified-Since header not set")
@@ -81,7 +81,7 @@ func TestDownloadGeoIPDBIfUpdated_Downloads(t *testing.T) {
 	}))
 	defer restore()
 
-	DownloadGeoIPDBIfUpdated()
+	downloadGeoIPDBIfUpdated()
 
 	data, err := os.ReadFile(config.GeoIPDBPath)
 	if err != nil {

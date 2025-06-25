@@ -17,7 +17,7 @@ var geoDBCountryLookup = func(ip net.IP) (*geoip2.Country, error) {
 	return geoDB.Country(ip)
 }
 
-func OpenGeoDB(path string) (*geoip2.Reader, error) {
+func openGeoDB(path string) (*geoip2.Reader, error) {
 	return geoip2.Open(path)
 }
 
@@ -38,7 +38,7 @@ func init() {
 	}
 }
 
-func IsPrivateIP(ip net.IP) bool {
+func isPrivateIP(ip net.IP) bool {
 	for _, cidr := range privateNets {
 		if cidr.Contains(ip) {
 			return true
@@ -47,7 +47,7 @@ func IsPrivateIP(ip net.IP) bool {
 	return false
 }
 
-func LookupCountry(ip net.IP) string {
+func lookupCountry(ip net.IP) string {
 	dbLock.RLock()
 	defer dbLock.RUnlock()
 	record, err := geoDBCountryLookup(ip)
