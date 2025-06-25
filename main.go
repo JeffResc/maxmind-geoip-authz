@@ -16,6 +16,7 @@ var (
 	listenAndServe = http.ListenAndServe
 	config         cfg.Config
 	licenseKey     string
+	accountID		string
 )
 
 // run initializes resources and starts the HTTP server. It is separated from
