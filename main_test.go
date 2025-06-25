@@ -10,7 +10,7 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
-func TestRunStartsServer(t *testing.T) {
+func TestServeStartsServer(t *testing.T) {
 	// create temp directory for config and credentials
 	dir := t.TempDir()
 
@@ -27,7 +27,6 @@ listen_addr: ":1234"
 maxmind_account_id_file: "` + accFile + `"
 maxmind_license_key_file: "` + licFile + `"
 maxmind_edition_id: "GeoLite2-Country"
-update_check_interval_hours: 1
 `
 	os.WriteFile(filepath.Join(dir, "config.yaml"), []byte(cfg), 0o600)
 
@@ -57,15 +56,12 @@ update_check_interval_hours: 1
 	}
 	defer func() { listenAndServe = http.ListenAndServe }()
 
-	periodicUpdaterFn = func() {}
-	defer func() { periodicUpdaterFn = PeriodicUpdater }()
-
-	if err := run(); err != nil {
-		t.Fatalf("run returned error: %v", err)
+	if err := serve(); err != nil {
+		t.Fatalf("serve returned error: %v", err)
 	}
 
-	if !calledDownload {
-		t.Errorf("download function not called")
+	if calledDownload {
+		t.Errorf("download function should not be called")
 	}
 	if openPath != "db.mmdb" {
 		t.Errorf("openGeoDB path = %s", openPath)
@@ -75,7 +71,7 @@ update_check_interval_hours: 1
 	}
 }
 
-func TestRunOpenGeoDBError(t *testing.T) {
+func TestServeOpenGeoDBError(t *testing.T) {
 	dir := t.TempDir()
 
 	accFile := filepath.Join(dir, "acc")
@@ -89,7 +85,6 @@ listen_addr: ":0"
 maxmind_account_id_file: "` + accFile + `"
 maxmind_license_key_file: "` + licFile + `"
 maxmind_edition_id: "GeoLite2-Country"
-update_check_interval_hours: 1
 `
 	os.WriteFile(filepath.Join(dir, "config.yaml"), []byte(cfg), 0o600)
 
@@ -100,16 +95,13 @@ update_check_interval_hours: 1
 	openGeoDBFn = func(path string) (*geoip2.Reader, error) { return nil, fmt.Errorf("bad") }
 	defer func() { openGeoDBFn = OpenGeoDB }()
 
-	periodicUpdaterFn = func() {}
-	defer func() { periodicUpdaterFn = PeriodicUpdater }()
-
 	listenAndServe = func(addr string, h http.Handler) error { return nil }
 	defer func() { listenAndServe = http.ListenAndServe }()
 
 	downloadGeoIPDBIfUpdated = func() {}
 	defer func() { downloadGeoIPDBIfUpdated = DownloadGeoIPDBIfUpdated }()
 
-	if err := run(); err == nil {
+	if err := serve(); err == nil {
 		t.Fatalf("expected error from run when openGeoDB fails")
 	}
 }

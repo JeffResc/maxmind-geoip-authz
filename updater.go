@@ -8,21 +8,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/oschwald/geoip2-golang"
 )
-
-// newTicker creates a ticker that produces events at the given duration.
-// It is overridden in tests to allow deterministic control of ticker events.
-var newTicker = func(d time.Duration) <-chan time.Time { return time.Tick(d) }
-
-func PeriodicUpdater() {
-	ticker := newTicker(time.Duration(config.UpdateCheckIntervalHours) * time.Hour)
-	for range ticker {
-		downloadGeoIPDBIfUpdated()
-	}
-}
 
 func DownloadGeoIPDBIfUpdated() {
 	url := fmt.Sprintf(

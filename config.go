@@ -5,39 +5,36 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"github.com/spf13/viper"
 )
 
 type Config struct {
-	Mode                     string   `yaml:"mode"`
-	Countries                []string `yaml:"countries"`
-	BlockPrivateIPs          bool     `yaml:"block_private_ips"`
-	GeoIPDBPath              string   `yaml:"geoip_db_path"`
-	ListenAddr               string   `yaml:"listen_addr"`
-	Debug                    bool     `yaml:"debug"`
-	MaxMindAccountIDFile     string   `yaml:"maxmind_account_id_file"`
-	MaxMindLicenseKeyFile    string   `yaml:"maxmind_license_key_file"`
-	MaxMindEditionID         string   `yaml:"maxmind_edition_id"`
-	UpdateCheckIntervalHours int      `yaml:"update_check_interval_hours"`
+	Mode                  string   `yaml:"mode"`
+	Countries             []string `yaml:"countries"`
+	BlockPrivateIPs       bool     `yaml:"block_private_ips"`
+	GeoIPDBPath           string   `yaml:"geoip_db_path"`
+	ListenAddr            string   `yaml:"listen_addr"`
+	Debug                 bool     `yaml:"debug"`
+	MaxMindAccountIDFile  string   `yaml:"maxmind_account_id_file"`
+	MaxMindLicenseKeyFile string   `yaml:"maxmind_license_key_file"`
+	MaxMindEditionID      string   `yaml:"maxmind_edition_id"`
 }
 
 var config Config
 var accountID, licenseKey string
 
 func LoadConfig(path string) Config {
-	data, err := os.ReadFile(path)
-	if err != nil {
+	v := viper.New()
+	v.SetConfigFile(path)
+	if err := v.ReadInConfig(); err != nil {
 		log.Fatalf("Failed to read config: %v", err)
 	}
 	var c Config
-	if err := yaml.Unmarshal(data, &c); err != nil {
+	if err := v.Unmarshal(&c); err != nil {
 		log.Fatalf("Failed to parse config: %v", err)
 	}
 	if c.Mode != "allowlist" && c.Mode != "blocklist" {
 		log.Fatalf("Invalid mode: %s", c.Mode)
-	}
-	if c.UpdateCheckIntervalHours <= 0 {
-		log.Fatalf("Invalid update_check_interval_hours: %d", c.UpdateCheckIntervalHours)
 	}
 	return c
 }

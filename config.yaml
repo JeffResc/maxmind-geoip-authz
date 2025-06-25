@@ -9,4 +9,3 @@ debug: true
 maxmind_account_id_file: "/secrets/maxmind-creds/MAXMIND_ACCOUNT_ID"
 maxmind_license_key_file: "/secrets/maxmind-creds/MAXMIND_LICENSE_KEY"
 maxmind_edition_id: "GeoLite2-Country"
-update_check_interval_hours: 24
