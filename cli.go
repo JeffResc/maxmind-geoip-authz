@@ -34,7 +34,9 @@ var updateDBCmd = &cobra.Command{
 			config.MaxMindAccountIDFile,
 			config.MaxMindLicenseKeyFile,
 		)
-		downloadGeoIPDBIfUpdated()
+		if err := downloadGeoIPDBIfUpdated(); err != nil {
+			log.Fatalf("update failed: %v", err)
+		}
 	},
 }
 

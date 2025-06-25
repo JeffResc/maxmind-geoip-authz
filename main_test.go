@@ -29,7 +29,7 @@ maxmind_edition_id: "GeoLite2-Country"
 	defer os.Chdir(cwd)
 
 	calledDownload := false
-	downloadGeoIPDBIfUpdatedFn = func() { calledDownload = true }
+	downloadGeoIPDBIfUpdatedFn = func() error { calledDownload = true; return nil }
 	defer func() { downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated }()
 
 	var openPath string
@@ -84,7 +84,7 @@ maxmind_edition_id: "GeoLite2-Country"
 	listenAndServe = func(addr string, h http.Handler) error { return nil }
 	defer func() { listenAndServe = http.ListenAndServe }()
 
-	downloadGeoIPDBIfUpdatedFn = func() {}
+	downloadGeoIPDBIfUpdatedFn = func() error { return nil }
 	defer func() { downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated }()
 
 	if err := serve(); err == nil {

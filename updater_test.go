@@ -51,7 +51,9 @@ func TestDownloadGeoIPDBIfUpdated_NoUpdate(t *testing.T) {
 	}))
 	defer restore()
 
-	downloadGeoIPDBIfUpdated()
+	if err := downloadGeoIPDBIfUpdated(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	if !headerSeen {
 		t.Fatalf("If-Modified-Since header not set")
@@ -83,14 +85,12 @@ func TestDownloadGeoIPDBIfUpdated_Downloads(t *testing.T) {
 	}))
 	defer restore()
 
-	downloadGeoIPDBIfUpdated()
-
-	data, err := os.ReadFile(config.GeoIPDBPath)
-	if err != nil {
-		t.Fatalf("DB file not written: %v", err)
+	if err := downloadGeoIPDBIfUpdated(); err == nil {
+		t.Fatalf("expected error opening DB, got nil")
 	}
-	if !bytes.Equal(data, mmdbContent) {
-		t.Fatalf("DB content mismatch")
+
+	if _, err := os.Stat(config.GeoIPDBPath); !os.IsNotExist(err) {
+		t.Fatalf("DB file should not be replaced on error")
 	}
 }
 
@@ -105,7 +105,9 @@ func TestExtractAndSwapDB_NoMMDB(t *testing.T) {
 	zw.Close()
 	buf.Close()
 
-	extractAndSwapDB(zipPath)
+	if err := extractAndSwapDB(zipPath); err == nil {
+		t.Fatalf("expected error for missing MMDB")
+	}
 
 	if _, err := os.Stat(config.GeoIPDBPath); !os.IsNotExist(err) {
 		t.Fatalf("DB file should not exist")

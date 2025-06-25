@@ -12,9 +12,9 @@ import (
 
 // function variables so tests can stub behavior
 var (
-	downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated
-	openGeoDBFn                = geoip.Open
-	listenAndServe             = http.ListenAndServe
+	downloadGeoIPDBIfUpdatedFn func() error = downloadGeoIPDBIfUpdated
+	openGeoDBFn                             = geoip.Open
+	listenAndServe                          = http.ListenAndServe
 	config                     cfg.Config
 	accountID, licenseKey      string
 )
