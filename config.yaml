@@ -3,6 +3,7 @@ countries:
   - "CN"
   - "RU"
 block_private_ips: true
+unknown_action: allow
 geoip_db_path: "/app/GeoLite2-Country.mmdb"
 listen_addr: ":8080"
 debug: false

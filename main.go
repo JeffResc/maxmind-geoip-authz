@@ -31,6 +31,16 @@ func loadConfig(path string) cfg.Config {
 	if c.Mode != "allowlist" && c.Mode != "blocklist" {
 		log.Fatalf("Invalid mode: %s", c.Mode)
 	}
+	if c.UnknownAction == "" {
+		if c.Mode == "allowlist" {
+			c.UnknownAction = "deny"
+		} else {
+			c.UnknownAction = "allow"
+		}
+	}
+	if c.UnknownAction != "allow" && c.UnknownAction != "deny" {
+		log.Fatalf("Invalid unknown_action: %s", c.UnknownAction)
+	}
 	return c
 }
 

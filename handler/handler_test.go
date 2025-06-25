@@ -140,11 +140,11 @@ func TestBlocklistAllowed(t *testing.T) {
 	}
 }
 
-func TestUnknownCountry(t *testing.T) {
+func TestUnknownCountryAllowed(t *testing.T) {
 	LookupCountryFn = fakeLookup
 	defer func() { LookupCountryFn = geoip.LookupCountry }()
 
-	config := cfg.Config{Mode: "blocklist", Countries: []string{"US"}}
+	config := cfg.Config{Mode: "blocklist", Countries: []string{"US"}, UnknownAction: "allow"}
 	testLookup = map[string]string{}
 
 	req := httptest.NewRequest("GET", "/authz", nil)
@@ -153,6 +153,22 @@ func TestUnknownCountry(t *testing.T) {
 
 	if status != http.StatusOK || body["status"] != "allowed" {
 		t.Fatalf("expected allowed for unknown country, got %v %#v", status, body)
+	}
+}
+
+func TestUnknownCountryDenied(t *testing.T) {
+	LookupCountryFn = fakeLookup
+	defer func() { LookupCountryFn = geoip.LookupCountry }()
+
+	config := cfg.Config{Mode: "blocklist", Countries: []string{"US"}, UnknownAction: "deny"}
+	testLookup = map[string]string{}
+
+	req := httptest.NewRequest("GET", "/authz", nil)
+	req.Header.Set("X-Forwarded-For", "8.8.8.8")
+	status, body := runRequest(config, req)
+
+	if status != http.StatusForbidden || body["reason"] != "Unknown country" {
+		t.Fatalf("expected denial for unknown country, got %v %#v", status, body)
 	}
 }
 
