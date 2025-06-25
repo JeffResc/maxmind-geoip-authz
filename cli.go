@@ -7,7 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{Use: "geoip"}
+var rootCmd = &cobra.Command{
+	Use:   "geoip",
+	Short: "MaxMind GeoIP authorization tool",
+}
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
@@ -23,7 +26,10 @@ var serveCmd = &cobra.Command{
 	},
 }
 
-var updateCmd = &cobra.Command{Use: "update"}
+var updateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update GeoIP resources",
+}
 
 var updateDBCmd = &cobra.Command{
 	Use:   "database",

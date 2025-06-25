@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -8,14 +9,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func TestRootCmdRequiresSubcommand(t *testing.T) {
+func TestRootCmdShowsHelp(t *testing.T) {
 	origArgs := os.Args
 	defer func() { os.Args = origArgs }()
 	os.Args = []string{"geoip"}
 
+	origStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
 	err := rootCmd.Execute()
-	if err == nil || err.Error() != "subcommand required" {
-		t.Fatalf("expected subcommand error, got %v", err)
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = origStdout
+
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if !strings.Contains(string(out), "serve") {
+		t.Fatalf("help output missing commands: %s", out)
 	}
 }
 
@@ -63,5 +74,26 @@ func TestUpdateDatabaseCommandRuns(t *testing.T) {
 	}
 	if !called {
 		t.Fatalf("update database command not executed")
+	}
+}
+
+func TestHelpFlagShowsHelp(t *testing.T) {
+	origArgs := os.Args
+	defer func() { os.Args = origArgs }()
+	os.Args = []string{"geoip", "-h"}
+
+	origStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	err := rootCmd.Execute()
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = origStdout
+
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if !strings.Contains(string(out), "serve") {
+		t.Fatalf("help output missing commands: %s", out)
 	}
 }
