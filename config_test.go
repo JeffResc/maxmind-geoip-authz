@@ -75,6 +75,32 @@ func TestLoadConfigInvalidMode(t *testing.T) {
 	}
 }
 
+func TestLoadConfigInvalidInterval(t *testing.T) {
+	if os.Getenv("TEST_FATAL_INTERVAL") == "1" {
+		data := []byte("mode: allowlist\nupdate_check_interval_hours: 0")
+		tmp, err := ioutil.TempFile("", "badcfg*.yaml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := tmp.Write(data); err != nil {
+			t.Fatal(err)
+		}
+		tmp.Close()
+		LoadConfig(tmp.Name())
+		return
+	}
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestLoadConfigInvalidInterval")
+	cmd.Env = append(os.Environ(), "TEST_FATAL_INTERVAL=1")
+	err := cmd.Run()
+	if err == nil {
+		t.Fatalf("expected failure")
+	}
+	if _, ok := err.(*exec.ExitError); !ok {
+		t.Fatalf("expected exit error, got %v", err)
+	}
+}
+
 func TestLoadMaxMindCredentialsValid(t *testing.T) {
 	acc, err := ioutil.TempFile("", "acc")
 	if err != nil {
