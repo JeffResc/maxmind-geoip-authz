@@ -23,7 +23,10 @@ var serveCmd = &cobra.Command{
 	},
 }
 
-var updateCmd = &cobra.Command{Use: "update"}
+var updateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update GeoIP resources",
+}
 
 var updateDBCmd = &cobra.Command{
 	Use:   "database",

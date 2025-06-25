@@ -2,6 +2,7 @@ package cobra
 
 import (
 	"errors"
+	"fmt"
 	"os"
 )
 
@@ -13,6 +14,18 @@ type Command struct {
 	Run   func(cmd *Command, args []string)
 
 	commands []*Command
+}
+
+// Help prints usage information for this command and its subcommands.
+func (c *Command) Help() {
+	fmt.Printf("Usage: %s [command]\n", c.Use)
+	if len(c.commands) > 0 {
+		fmt.Println()
+		fmt.Println("Available Commands:")
+		for _, sub := range c.commands {
+			fmt.Printf("  %s\t%s\n", sub.Use, sub.Short)
+		}
+	}
 }
 
 // AddCommand adds subcommands to this command.
@@ -36,8 +49,14 @@ func (c *Command) execute(args []string) error {
 			return nil
 		}
 		if len(c.commands) > 0 {
-			return errors.New("subcommand required")
+			c.Help()
+			return nil
 		}
+		return nil
+	}
+
+	if args[0] == "-h" || args[0] == "--help" || args[0] == "help" {
+		c.Help()
 		return nil
 	}
 	for _, sub := range c.commands {
@@ -52,5 +71,6 @@ func (c *Command) execute(args []string) error {
 		c.Run(c, args)
 		return nil
 	}
+	c.Help()
 	return errors.New("unknown command: " + args[0])
 }
