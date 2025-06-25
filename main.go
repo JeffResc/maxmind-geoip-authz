@@ -19,34 +19,13 @@ var (
 	listenAndServe = http.ListenAndServe
 )
 
-type Viper struct {
-	configFile string
-	raw        []byte
-}
-
-func New() *Viper { return &Viper{} }
-
-func (v *Viper) SetConfigFile(path string) { v.configFile = path }
-
-func (v *Viper) ReadInConfig() error {
-	data, err := os.ReadFile(v.configFile)
-	if err != nil {
-		return err
-	}
-	v.raw = data
-	return nil
-}
-
-func (v *Viper) Unmarshal(out interface{}) error { return yaml.Unmarshal(v.raw, out) }
-
 func loadConfig(path string) cfg.Config {
-	v := New()
-	v.SetConfigFile(path)
-	if err := v.ReadInConfig(); err != nil {
+	data, err := os.ReadFile(path)
+	if err != nil {
 		log.Fatalf("Failed to read config: %v", err)
 	}
 	var c cfg.Config
-	if err := v.Unmarshal(&c); err != nil {
+	if err := yaml.Unmarshal(data, &c); err != nil {
 		log.Fatalf("Failed to parse config: %v", err)
 	}
 	if c.Mode != "allowlist" && c.Mode != "blocklist" {
