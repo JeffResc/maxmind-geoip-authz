@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"io/ioutil"
@@ -33,7 +33,7 @@ maxmind_edition_id: GeoLite2-Country
 		t.Fatal(err)
 	}
 
-	c := loadConfig(tmp.Name())
+	c := Load(tmp.Name())
 	if c.Mode != "allowlist" || !c.BlockPrivateIPs || c.ListenAddr != ":8080" {
 		t.Fatalf("unexpected config: %#v", c)
 	}
@@ -56,7 +56,7 @@ func TestLoadConfigInvalidMode(t *testing.T) {
 			t.Fatal(err)
 		}
 		tmp.Close()
-		loadConfig(tmp.Name())
+		Load(tmp.Name())
 		return
 	}
 
@@ -87,7 +87,7 @@ func TestLoadMaxMindCredentialsValid(t *testing.T) {
 	acc.Close()
 	lic.Close()
 
-	a, l := loadMaxMindCredentials(acc.Name(), lic.Name())
+	a, l := LoadMaxMindCredentials(acc.Name(), lic.Name())
 	if a != "123" || l != "abc" {
 		t.Fatalf("unexpected credentials: %q %q", a, l)
 	}
@@ -95,7 +95,7 @@ func TestLoadMaxMindCredentialsValid(t *testing.T) {
 
 func TestLoadMaxMindCredentialsMissing(t *testing.T) {
 	if os.Getenv("TEST_FATAL_CRED") == "1" {
-		loadMaxMindCredentials("/nonexistent/account", "/nonexistent/license")
+		LoadMaxMindCredentials("/nonexistent/account", "/nonexistent/license")
 		return
 	}
 

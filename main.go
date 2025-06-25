@@ -4,22 +4,28 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	cfg "github.com/jeffresc/maxmind-geoip-authz/config"
+	"github.com/jeffresc/maxmind-geoip-authz/geoip"
+	"github.com/jeffresc/maxmind-geoip-authz/handler"
 )
 
 // function variables so tests can stub behavior
 var (
 	downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated
-	openGeoDBFn                = openGeoDB
+	openGeoDBFn                = geoip.Open
 	listenAndServe             = http.ListenAndServe
+	config                     cfg.Config
+	accountID, licenseKey      string
 )
 
 // run initializes resources and starts the HTTP server. It is separated from
 // main so tests can exercise the startup logic without exiting the process.
 func serve() error {
-	config = loadConfig("config.yaml")
+	config = cfg.Load("config.yaml")
 
 	var err error
-	geoDB, err = openGeoDBFn(config.GeoIPDBPath)
+	geoip.DB, err = openGeoDBFn(config.GeoIPDBPath)
 	if err != nil {
 		return fmt.Errorf("Failed to open GeoIP DB: %v", err)
 	}
@@ -28,7 +34,7 @@ func serve() error {
 		log.Printf("Starting server on %s", config.ListenAddr)
 	}
 
-	http.HandleFunc("/authz", authzHandler)
+	http.HandleFunc("/authz", handler.Authz(config))
 	return listenAndServe(config.ListenAddr, nil)
 }
 

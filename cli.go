@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	cfg "github.com/jeffresc/maxmind-geoip-authz/config"
 	"github.com/spf13/cobra"
 )
 
@@ -28,8 +29,8 @@ var updateDBCmd = &cobra.Command{
 	Use:   "database",
 	Short: "Update the GeoIP database",
 	Run: func(cmd *cobra.Command, args []string) {
-		config = loadConfig("config.yaml")
-		accountID, licenseKey = loadMaxMindCredentials(
+		config = cfg.Load("config.yaml")
+		accountID, licenseKey = cfg.LoadMaxMindCredentials(
 			config.MaxMindAccountIDFile,
 			config.MaxMindLicenseKeyFile,
 		)
