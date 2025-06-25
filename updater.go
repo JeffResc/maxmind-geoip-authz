@@ -17,14 +17,14 @@ import (
 // It is overridden in tests to allow deterministic control of ticker events.
 var newTicker = func(d time.Duration) <-chan time.Time { return time.Tick(d) }
 
-func PeriodicUpdater() {
+func periodicUpdater() {
 	ticker := newTicker(time.Duration(config.UpdateCheckIntervalHours) * time.Hour)
 	for range ticker {
-		downloadGeoIPDBIfUpdated()
+		downloadGeoIPDBIfUpdatedFn()
 	}
 }
 
-func DownloadGeoIPDBIfUpdated() {
+func downloadGeoIPDBIfUpdated() {
 	url := fmt.Sprintf(
 		"https://download.maxmind.com/app/geoip_download?edition_id=%s&license_key=%s&suffix=zip",
 		config.MaxMindEditionID, licenseKey,

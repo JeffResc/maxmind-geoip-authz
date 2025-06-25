@@ -37,15 +37,15 @@ update_check_interval_hours: 1
 	defer os.Chdir(cwd)
 
 	calledDownload := false
-	downloadGeoIPDBIfUpdated = func() { calledDownload = true }
-	defer func() { downloadGeoIPDBIfUpdated = DownloadGeoIPDBIfUpdated }()
+	downloadGeoIPDBIfUpdatedFn = func() { calledDownload = true }
+	defer func() { downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated }()
 
 	var openPath string
 	openGeoDBFn = func(path string) (*geoip2.Reader, error) {
 		openPath = path
 		return nil, nil
 	}
-	defer func() { openGeoDBFn = OpenGeoDB }()
+	defer func() { openGeoDBFn = openGeoDB }()
 
 	served := false
 	listenAndServe = func(addr string, h http.Handler) error {
@@ -58,7 +58,7 @@ update_check_interval_hours: 1
 	defer func() { listenAndServe = http.ListenAndServe }()
 
 	periodicUpdaterFn = func() {}
-	defer func() { periodicUpdaterFn = PeriodicUpdater }()
+	defer func() { periodicUpdaterFn = periodicUpdater }()
 
 	if err := run(); err != nil {
 		t.Fatalf("run returned error: %v", err)
@@ -98,16 +98,16 @@ update_check_interval_hours: 1
 	defer os.Chdir(cwd)
 
 	openGeoDBFn = func(path string) (*geoip2.Reader, error) { return nil, fmt.Errorf("bad") }
-	defer func() { openGeoDBFn = OpenGeoDB }()
+	defer func() { openGeoDBFn = openGeoDB }()
 
 	periodicUpdaterFn = func() {}
-	defer func() { periodicUpdaterFn = PeriodicUpdater }()
+	defer func() { periodicUpdaterFn = periodicUpdater }()
 
 	listenAndServe = func(addr string, h http.Handler) error { return nil }
 	defer func() { listenAndServe = http.ListenAndServe }()
 
-	downloadGeoIPDBIfUpdated = func() {}
-	defer func() { downloadGeoIPDBIfUpdated = DownloadGeoIPDBIfUpdated }()
+	downloadGeoIPDBIfUpdatedFn = func() {}
+	defer func() { downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated }()
 
 	if err := run(); err == nil {
 		t.Fatalf("expected error from run when openGeoDB fails")

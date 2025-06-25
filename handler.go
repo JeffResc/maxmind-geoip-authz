@@ -8,12 +8,12 @@ import (
 	"strings"
 )
 
-// lookupCountry is used by AuthzHandler to determine the requester's country.
-// It points to LookupCountry by default but can be overridden in tests.
-var lookupCountry = LookupCountry
+// lookupCountryFn is used by authzHandler to determine the requester's country.
+// It points to lookupCountry by default but can be overridden in tests.
+var lookupCountryFn = lookupCountry
 
-func AuthzHandler(w http.ResponseWriter, r *http.Request) {
-	ip := ExtractClientIP(r)
+func authzHandler(w http.ResponseWriter, r *http.Request) {
+	ip := extractClientIP(r)
 	parsedIP := net.ParseIP(ip)
 	if parsedIP == nil {
 		deny(w, "Invalid IP")
@@ -24,17 +24,17 @@ func AuthzHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Request from IP: %s", ip)
 	}
 
-	if IsPrivateIP(parsedIP) && config.BlockPrivateIPs {
+	if isPrivateIP(parsedIP) && config.BlockPrivateIPs {
 		deny(w, "Private IP blocked")
 		return
 	}
 
-	countryCode := lookupCountry(parsedIP)
+	countryCode := lookupCountryFn(parsedIP)
 	if config.Debug {
 		log.Printf("Resolved Country: %s", countryCode)
 	}
 
-	inList := StringInSlice(countryCode, config.Countries)
+	inList := stringInSlice(countryCode, config.Countries)
 	if (config.Mode == "allowlist" && !inList) || (config.Mode == "blocklist" && inList) {
 		deny(w, "Country policy blocked")
 		return
@@ -43,7 +43,7 @@ func AuthzHandler(w http.ResponseWriter, r *http.Request) {
 	allow(w)
 }
 
-func ExtractClientIP(r *http.Request) string {
+func extractClientIP(r *http.Request) string {
 	forwarded := r.Header.Get("X-Forwarded-For")
 	if forwarded != "" {
 		parts := strings.Split(forwarded, ",")
@@ -63,7 +63,7 @@ func allow(w http.ResponseWriter) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "allowed"})
 }
 
-func StringInSlice(val string, list []string) bool {
+func stringInSlice(val string, list []string) bool {
 	for _, item := range list {
 		if strings.EqualFold(val, item) {
 			return true

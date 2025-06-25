@@ -11,8 +11,8 @@ import (
 func TestPeriodicUpdater(t *testing.T) {
 	// set a fake download function to count calls
 	count := 0
-	downloadGeoIPDBIfUpdated = func() { count++ }
-	defer func() { downloadGeoIPDBIfUpdated = DownloadGeoIPDBIfUpdated }()
+	downloadGeoIPDBIfUpdatedFn = func() { count++ }
+	defer func() { downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated }()
 
 	// create a controllable ticker channel
 	tickCh := make(chan time.Time)
@@ -21,7 +21,7 @@ func TestPeriodicUpdater(t *testing.T) {
 
 	done := make(chan struct{})
 	go func() {
-		PeriodicUpdater()
+		periodicUpdater()
 		close(done)
 	}()
 

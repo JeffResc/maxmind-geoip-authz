@@ -8,22 +8,22 @@ import (
 
 // function variables so tests can stub behavior
 var (
-	downloadGeoIPDBIfUpdated = DownloadGeoIPDBIfUpdated
-	openGeoDBFn              = OpenGeoDB
-	periodicUpdaterFn        = PeriodicUpdater
-	listenAndServe           = http.ListenAndServe
+	downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated
+	openGeoDBFn                = openGeoDB
+	periodicUpdaterFn          = periodicUpdater
+	listenAndServe             = http.ListenAndServe
 )
 
 // run initializes resources and starts the HTTP server. It is separated from
 // main so tests can exercise the startup logic without exiting the process.
 func run() error {
-	config = LoadConfig("config.yaml")
-	accountID, licenseKey = LoadMaxMindCredentials(
+	config = loadConfig("config.yaml")
+	accountID, licenseKey = loadMaxMindCredentials(
 		config.MaxMindAccountIDFile,
 		config.MaxMindLicenseKeyFile,
 	)
 
-	downloadGeoIPDBIfUpdated()
+	downloadGeoIPDBIfUpdatedFn()
 
 	var err error
 	geoDB, err = openGeoDBFn(config.GeoIPDBPath)
@@ -37,7 +37,7 @@ func run() error {
 		log.Printf("Starting server on %s", config.ListenAddr)
 	}
 
-	http.HandleFunc("/authz", AuthzHandler)
+	http.HandleFunc("/authz", authzHandler)
 	return listenAndServe(config.ListenAddr, nil)
 }
 

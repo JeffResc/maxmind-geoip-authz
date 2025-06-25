@@ -24,7 +24,7 @@ type Config struct {
 var config Config
 var accountID, licenseKey string
 
-func LoadConfig(path string) Config {
+func loadConfig(path string) Config {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("Failed to read config: %v", err)
@@ -42,7 +42,7 @@ func LoadConfig(path string) Config {
 	return c
 }
 
-func LoadMaxMindCredentials(accountPath, licensePath string) (string, string) {
+func loadMaxMindCredentials(accountPath, licensePath string) (string, string) {
 	accData, err := os.ReadFile(accountPath)
 	if err != nil {
 		log.Fatalf("Failed to read MaxMind Account ID: %v", err)
