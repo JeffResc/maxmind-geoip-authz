@@ -30,8 +30,12 @@ func Authz(cfg config.Config) http.HandlerFunc {
 			log.Printf("Request from IP: %s", ip)
 		}
 
-		if geoip.IsPrivateIP(parsedIP) && cfg.BlockPrivateIPs {
-			deny(w, "Private IP blocked")
+		if geoip.IsPrivateIP(parsedIP) {
+			if cfg.BlockPrivateIPs {
+				deny(w, "Private IP blocked")
+			} else {
+				allow(w)
+			}
 			return
 		}
 

@@ -76,6 +76,22 @@ func TestPrivateIPAllowed(t *testing.T) {
 	}
 }
 
+func TestPrivateIPAllowedUnknown(t *testing.T) {
+	LookupCountryFn = fakeLookup
+	defer func() { LookupCountryFn = geoip.LookupCountry }()
+
+	config := cfg.Config{Mode: "blocklist", BlockPrivateIPs: false, UnknownAction: "deny"}
+	testLookup = map[string]string{}
+
+	req := httptest.NewRequest("GET", "/authz", nil)
+	req.Header.Set("X-Forwarded-For", "10.0.0.2")
+	status, body := runRequest(config, req)
+
+	if status != http.StatusOK || body["status"] != "allowed" {
+		t.Fatalf("expected allowed for private IP when blocking disabled, got %v %#v", status, body)
+	}
+}
+
 func TestAllowlist(t *testing.T) {
 	LookupCountryFn = fakeLookup
 	defer func() { LookupCountryFn = geoip.LookupCountry }()
