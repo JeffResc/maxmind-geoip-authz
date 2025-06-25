@@ -21,16 +21,25 @@ func OpenGeoDB(path string) (*geoip2.Reader, error) {
 	return geoip2.Open(path)
 }
 
-func IsPrivateIP(ip net.IP) bool {
-	// https://datatracker.ietf.org/doc/html/rfc1918
-	privateBlocks := []string{
+var privateNets []*net.IPNet
+
+func init() {
+	blocks := []string{
 		"10.0.0.0/8",
 		"172.16.0.0/12",
 		"192.168.0.0/16",
 		"127.0.0.0/8",
 	}
-	for _, block := range privateBlocks {
-		_, cidr, _ := net.ParseCIDR(block)
+	for _, block := range blocks {
+		_, cidr, err := net.ParseCIDR(block)
+		if err == nil {
+			privateNets = append(privateNets, cidr)
+		}
+	}
+}
+
+func IsPrivateIP(ip net.IP) bool {
+	for _, cidr := range privateNets {
 		if cidr.Contains(ip) {
 			return true
 		}

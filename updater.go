@@ -20,7 +20,7 @@ var tickerFactory = func(d time.Duration) <-chan time.Time {
 func PeriodicUpdater() {
 	ticker := tickerFactory(time.Duration(config.UpdateCheckIntervalHours) * time.Hour)
 	for range ticker {
-		downloadGeoIPDBIfUpdated()
+		DownloadGeoIPDBIfUpdated()
 	}
 }
 
@@ -42,6 +42,7 @@ func DownloadGeoIPDBIfUpdated() {
 		if config.Debug && err == nil {
 			log.Printf("GeoIP DB is up to date")
 		}
+    resp.Body.Close()
 		return
 	}
 	defer resp.Body.Close()
