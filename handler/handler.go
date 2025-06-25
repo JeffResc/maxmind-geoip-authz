@@ -40,6 +40,15 @@ func Authz(cfg config.Config) http.HandlerFunc {
 			log.Printf("Resolved Country: %s", countryCode)
 		}
 
+		if countryCode == "UNKNOWN" {
+			if cfg.UnknownAction == "deny" {
+				deny(w, "Unknown country")
+			} else {
+				allow(w)
+			}
+			return
+		}
+
 		inList := stringInSlice(countryCode, cfg.Countries)
 		if (cfg.Mode == "allowlist" && !inList) || (cfg.Mode == "blocklist" && inList) {
 			deny(w, "Country policy blocked")

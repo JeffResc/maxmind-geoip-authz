@@ -14,6 +14,7 @@ countries:
   - US
   - CA
 block_private_ips: true
+unknown_action: deny
 geoip_db_path: /path/to/db
 listen_addr: :8080
 debug: true
@@ -37,7 +38,7 @@ debug: true
 	if len(c.Countries) != 2 || c.Countries[0] != "US" || c.Countries[1] != "CA" {
 		t.Fatalf("countries not parsed: %#v", c.Countries)
 	}
-	if c.GeoIPDBPath != "/path/to/db" {
+	if c.GeoIPDBPath != "/path/to/db" || c.UnknownAction != "deny" {
 		t.Fatalf("paths not parsed: %#v", c)
 	}
 }

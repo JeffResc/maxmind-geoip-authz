@@ -26,6 +26,7 @@ countries:
   - "CN"
   - "RU"
 block_private_ips: true
+unknown_action: allow
 geoip_db_path: "/app/GeoLite2-Country.mmdb"
 listen_addr: ":8080"
 debug: false
@@ -37,6 +38,7 @@ debug: false
 - **block_private_ips** – when set, requests from private IP ranges are denied.
   IPv6 ranges such as `::1`, `fc00::/7`, and `fe80::/10` are also considered
   private.
+- **unknown_action** – `allow` or `deny` requests when the country cannot be determined.
 - **geoip_db_path** – path to the MaxMind GeoIP2 country database.
 - **listen_addr** – address the HTTP server listens on.
 - **debug** – enable verbose logging.
