@@ -20,7 +20,6 @@ debug: true
 maxmind_account_id_file: acc
 maxmind_license_key_file: lic
 maxmind_edition_id: GeoLite2-Country
-update_check_interval_hours: 12
 `)
 	tmp, err := ioutil.TempFile("", "cfg*.yaml")
 	if err != nil {
@@ -44,9 +43,6 @@ update_check_interval_hours: 12
 	if c.GeoIPDBPath != "/path/to/db" || c.MaxMindEditionID != "GeoLite2-Country" {
 		t.Fatalf("paths not parsed: %#v", c)
 	}
-	if c.UpdateCheckIntervalHours != 12 {
-		t.Fatalf("interval not parsed: %#v", c.UpdateCheckIntervalHours)
-	}
 }
 
 func TestLoadConfigInvalidMode(t *testing.T) {
@@ -66,32 +62,6 @@ func TestLoadConfigInvalidMode(t *testing.T) {
 
 	cmd := exec.Command(os.Args[0], "-test.run=TestLoadConfigInvalidMode")
 	cmd.Env = append(os.Environ(), "TEST_FATAL=1")
-	err := cmd.Run()
-	if err == nil {
-		t.Fatalf("expected failure")
-	}
-	if _, ok := err.(*exec.ExitError); !ok {
-		t.Fatalf("expected exit error, got %v", err)
-	}
-}
-
-func TestLoadConfigInvalidInterval(t *testing.T) {
-	if os.Getenv("TEST_FATAL_INTERVAL") == "1" {
-		data := []byte("mode: allowlist\nupdate_check_interval_hours: 0")
-		tmp, err := ioutil.TempFile("", "badcfg*.yaml")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if _, err := tmp.Write(data); err != nil {
-			t.Fatal(err)
-		}
-		tmp.Close()
-		LoadConfig(tmp.Name())
-		return
-	}
-
-	cmd := exec.Command(os.Args[0], "-test.run=TestLoadConfigInvalidInterval")
-	cmd.Env = append(os.Environ(), "TEST_FATAL_INTERVAL=1")
 	err := cmd.Run()
 	if err == nil {
 		t.Fatalf("expected failure")
