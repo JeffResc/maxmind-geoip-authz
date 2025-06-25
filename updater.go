@@ -12,7 +12,7 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
-func DownloadGeoIPDBIfUpdated() {
+func downloadGeoIPDBIfUpdated() {
 	url := fmt.Sprintf(
 		"https://download.maxmind.com/app/geoip_download?edition_id=%s&license_key=%s&suffix=zip",
 		config.MaxMindEditionID, licenseKey,

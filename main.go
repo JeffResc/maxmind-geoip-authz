@@ -8,15 +8,15 @@ import (
 
 // function variables so tests can stub behavior
 var (
-	downloadGeoIPDBIfUpdated = DownloadGeoIPDBIfUpdated
-	openGeoDBFn              = OpenGeoDB
-	listenAndServe           = http.ListenAndServe
+	downloadGeoIPDBIfUpdatedFn = downloadGeoIPDBIfUpdated
+	openGeoDBFn                = openGeoDB
+	listenAndServe             = http.ListenAndServe
 )
 
 // run initializes resources and starts the HTTP server. It is separated from
 // main so tests can exercise the startup logic without exiting the process.
 func serve() error {
-	config = LoadConfig("config.yaml")
+	config = loadConfig("config.yaml")
 
 	var err error
 	geoDB, err = openGeoDBFn(config.GeoIPDBPath)
@@ -28,7 +28,7 @@ func serve() error {
 		log.Printf("Starting server on %s", config.ListenAddr)
 	}
 
-	http.HandleFunc("/authz", AuthzHandler)
+	http.HandleFunc("/authz", authzHandler)
 	return listenAndServe(config.ListenAddr, nil)
 }
 

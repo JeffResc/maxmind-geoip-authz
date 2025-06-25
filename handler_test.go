@@ -21,15 +21,15 @@ func fakeLookup(ip net.IP) string {
 // helper to run a single request and return status and body map
 func runRequest(req *http.Request) (int, map[string]string) {
 	rr := httptest.NewRecorder()
-	AuthzHandler(rr, req)
+	authzHandler(rr, req)
 	var body map[string]string
 	json.Unmarshal(rr.Body.Bytes(), &body)
 	return rr.Code, body
 }
 
 func TestInvalidIP(t *testing.T) {
-	lookupCountry = fakeLookup
-	defer func() { lookupCountry = LookupCountry }()
+	lookupCountryFn = fakeLookup
+	defer func() { lookupCountryFn = lookupCountry }()
 
 	config = Config{Mode: "blocklist"}
 
@@ -43,8 +43,8 @@ func TestInvalidIP(t *testing.T) {
 }
 
 func TestPrivateIPBlocked(t *testing.T) {
-	lookupCountry = fakeLookup
-	defer func() { lookupCountry = LookupCountry }()
+	lookupCountryFn = fakeLookup
+	defer func() { lookupCountryFn = lookupCountry }()
 
 	config = Config{Mode: "blocklist", BlockPrivateIPs: true}
 
@@ -58,8 +58,8 @@ func TestPrivateIPBlocked(t *testing.T) {
 }
 
 func TestPrivateIPAllowed(t *testing.T) {
-	lookupCountry = fakeLookup
-	defer func() { lookupCountry = LookupCountry }()
+	lookupCountryFn = fakeLookup
+	defer func() { lookupCountryFn = lookupCountry }()
 
 	config = Config{Mode: "blocklist", BlockPrivateIPs: false}
 	testLookup = map[string]string{"10.0.0.1": "US"}
@@ -74,8 +74,8 @@ func TestPrivateIPAllowed(t *testing.T) {
 }
 
 func TestAllowlist(t *testing.T) {
-	lookupCountry = fakeLookup
-	defer func() { lookupCountry = LookupCountry }()
+	lookupCountryFn = fakeLookup
+	defer func() { lookupCountryFn = lookupCountry }()
 
 	config = Config{Mode: "allowlist", Countries: []string{"US"}}
 	testLookup = map[string]string{"1.1.1.1": "US"}
@@ -90,8 +90,8 @@ func TestAllowlist(t *testing.T) {
 }
 
 func TestAllowlistDenied(t *testing.T) {
-	lookupCountry = fakeLookup
-	defer func() { lookupCountry = LookupCountry }()
+	lookupCountryFn = fakeLookup
+	defer func() { lookupCountryFn = lookupCountry }()
 
 	config = Config{Mode: "allowlist", Countries: []string{"US"}}
 	testLookup = map[string]string{"2.2.2.2": "FR"}
@@ -106,8 +106,8 @@ func TestAllowlistDenied(t *testing.T) {
 }
 
 func TestBlocklist(t *testing.T) {
-	lookupCountry = fakeLookup
-	defer func() { lookupCountry = LookupCountry }()
+	lookupCountryFn = fakeLookup
+	defer func() { lookupCountryFn = lookupCountry }()
 
 	config = Config{Mode: "blocklist", Countries: []string{"FR"}}
 	testLookup = map[string]string{"2.2.2.2": "FR"}
@@ -122,8 +122,8 @@ func TestBlocklist(t *testing.T) {
 }
 
 func TestBlocklistAllowed(t *testing.T) {
-	lookupCountry = fakeLookup
-	defer func() { lookupCountry = LookupCountry }()
+	lookupCountryFn = fakeLookup
+	defer func() { lookupCountryFn = lookupCountry }()
 
 	config = Config{Mode: "blocklist", Countries: []string{"FR"}}
 	testLookup = map[string]string{"1.1.1.1": "US"}
@@ -138,8 +138,8 @@ func TestBlocklistAllowed(t *testing.T) {
 }
 
 func TestUnknownCountry(t *testing.T) {
-	lookupCountry = fakeLookup
-	defer func() { lookupCountry = LookupCountry }()
+	lookupCountryFn = fakeLookup
+	defer func() { lookupCountryFn = lookupCountry }()
 
 	config = Config{Mode: "blocklist", Countries: []string{"US"}}
 	testLookup = map[string]string{}
@@ -154,8 +154,8 @@ func TestUnknownCountry(t *testing.T) {
 }
 
 func TestMultipleForwardedFor(t *testing.T) {
-	lookupCountry = fakeLookup
-	defer func() { lookupCountry = LookupCountry }()
+	lookupCountryFn = fakeLookup
+	defer func() { lookupCountryFn = lookupCountry }()
 
 	config = Config{Mode: "blocklist"}
 	testLookup = map[string]string{"5.5.5.5": "US"}
@@ -170,8 +170,8 @@ func TestMultipleForwardedFor(t *testing.T) {
 }
 
 func TestRemoteAddrUsed(t *testing.T) {
-	lookupCountry = fakeLookup
-	defer func() { lookupCountry = LookupCountry }()
+	lookupCountryFn = fakeLookup
+	defer func() { lookupCountryFn = lookupCountry }()
 
 	config = Config{Mode: "blocklist"}
 	testLookup = map[string]string{"7.7.7.7": "US"}
