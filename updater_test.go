@@ -22,6 +22,12 @@ func withHTTPMock(fn roundTripFunc) func() {
 	return func() { http.DefaultClient.Transport = orig }
 }
 
+// testBody is an io.ReadCloser that records if Close was called.
+type testBody struct{ closed *bool }
+
+func (b testBody) Read(p []byte) (int, error) { return 0, io.EOF }
+func (b testBody) Close() error               { *b.closed = true; return nil }
+
 func TestDownloadGeoIPDBIfUpdated_NoUpdate(t *testing.T) {
 	// ensure no leftover file
 	os.Remove("/tmp/geoip.zip")
@@ -34,11 +40,12 @@ func TestDownloadGeoIPDBIfUpdated_NoUpdate(t *testing.T) {
 	os.WriteFile(config.GeoIPDBPath, []byte("old"), 0644)
 
 	var headerSeen bool
+	closed := false
 	restore := withHTTPMock(roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		if req.Header.Get("If-Modified-Since") != "" {
 			headerSeen = true
 		}
-		return &http.Response{StatusCode: http.StatusNotModified, Body: io.NopCloser(bytes.NewReader(nil)), Header: make(http.Header)}, nil
+		return &http.Response{StatusCode: http.StatusNotModified, Body: testBody{closed: &closed}, Header: make(http.Header)}, nil
 	}))
 	defer restore()
 
@@ -50,6 +57,9 @@ func TestDownloadGeoIPDBIfUpdated_NoUpdate(t *testing.T) {
 
 	if _, err := os.Stat("/tmp/geoip.zip"); !os.IsNotExist(err) {
 		t.Fatalf("zip file should not be created")
+	}
+	if !closed {
+		t.Fatalf("response body not closed")
 	}
 }
 
