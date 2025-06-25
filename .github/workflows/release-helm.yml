@@ -1,0 +1,36 @@
+name: Release Helm Chart to GHCR
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    name: Package & Push Helm Chart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+      - name: Extract version from GitHub release
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Convert repository name to lowercase
+        run: echo "REPO_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Package Helm chart
+        run: |
+          helm package charts/maxmind-geoip-authz \
+            --version ${VERSION} \
+            --app-version ${VERSION}
+
+      - name: Push Helm chart to GHCR
+        run: |
+          helm push maxmind-geoip-authz-${VERSION}.tgz oci://ghcr.io/${REPO_NAME}
