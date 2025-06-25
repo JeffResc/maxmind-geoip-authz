@@ -2,7 +2,7 @@ mode: "blocklist"
 countries:
   - "CN"
   - "RU"
-allow_private_ips: false
+private_ip_action: deny
 unknown_action: allow
 geoip_db_path: "/app/GeoLite2-Country.mmdb"
 listen_addr: ":8080"

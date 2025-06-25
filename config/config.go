@@ -5,7 +5,7 @@ package config
 type Config struct {
 	Mode            string   `yaml:"mode"`
 	Countries       []string `yaml:"countries"`
-	AllowPrivateIPs bool     `yaml:"allow_private_ips"`
+	PrivateIPAction string   `yaml:"private_ip_action"`
 	UnknownAction   string   `yaml:"unknown_action"`
 	GeoIPDBPath     string   `yaml:"geoip_db_path"`
 	ListenAddr      string   `yaml:"listen_addr"`

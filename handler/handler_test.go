@@ -49,7 +49,7 @@ func TestPrivateIPBlocked(t *testing.T) {
 	LookupCountryFn = fakeLookup
 	defer func() { LookupCountryFn = geoip.LookupCountry }()
 
-	config := cfg.Config{Mode: "blocklist", AllowPrivateIPs: false}
+	config := cfg.Config{Mode: "blocklist", PrivateIPAction: "deny"}
 
 	req := httptest.NewRequest("GET", "/authz", nil)
 	req.Header.Set("X-Forwarded-For", "10.0.0.1")
@@ -64,7 +64,7 @@ func TestPrivateIPAllowed(t *testing.T) {
 	LookupCountryFn = fakeLookup
 	defer func() { LookupCountryFn = geoip.LookupCountry }()
 
-	config := cfg.Config{Mode: "blocklist", AllowPrivateIPs: true}
+	config := cfg.Config{Mode: "blocklist", PrivateIPAction: "allow"}
 
 	req := httptest.NewRequest("GET", "/authz", nil)
 	req.Header.Set("X-Forwarded-For", "10.0.0.1")
