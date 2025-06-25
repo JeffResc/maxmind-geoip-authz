@@ -2,7 +2,9 @@ package cobra
 
 import (
 	"errors"
+	"io"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -57,17 +59,27 @@ func TestExecuteRunsRunEWithArgs(t *testing.T) {
 	}
 }
 
-func TestExecuteSubcommandRequired(t *testing.T) {
+func TestExecuteShowsHelp(t *testing.T) {
 	root := &Command{Use: "root"}
 	root.AddCommand(&Command{Use: "sub"})
 
-	orig := os.Args
+	origArgs := os.Args
 	os.Args = []string{"prog"}
-	defer func() { os.Args = orig }()
+	defer func() { os.Args = origArgs }()
 
+	origStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
 	err := root.Execute()
-	if err == nil || err.Error() != "subcommand required" {
-		t.Fatalf("expected subcommand required error, got %v", err)
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = origStdout
+
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if !strings.Contains(string(out), "sub") {
+		t.Fatalf("help output missing subcommand: %s", out)
 	}
 }
 
@@ -100,6 +112,30 @@ func TestExecuteUnknownCommand(t *testing.T) {
 	err := root.Execute()
 	if err == nil || err.Error() != "unknown command: bad" {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestExecuteHelpFlag(t *testing.T) {
+	root := &Command{Use: "root"}
+	root.AddCommand(&Command{Use: "sub"})
+
+	origArgs := os.Args
+	os.Args = []string{"prog", "-h"}
+	defer func() { os.Args = origArgs }()
+
+	origStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	err := root.Execute()
+	w.Close()
+	out, _ := io.ReadAll(r)
+	os.Stdout = origStdout
+
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if !strings.Contains(string(out), "sub") {
+		t.Fatalf("help output missing subcommand: %s", out)
 	}
 }
 
