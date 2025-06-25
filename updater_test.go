@@ -1,0 +1,101 @@
+package main
+
+import (
+	"archive/zip"
+	"bytes"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+// helper RoundTripper to mock HTTP responses
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+// sets http.DefaultClient.Transport to mock; returns restore function
+func withHTTPMock(fn roundTripFunc) func() {
+	orig := http.DefaultClient.Transport
+	http.DefaultClient.Transport = fn
+	return func() { http.DefaultClient.Transport = orig }
+}
+
+func TestDownloadGeoIPDBIfUpdated_NoUpdate(t *testing.T) {
+	// ensure no leftover file
+	os.Remove("/tmp/geoip.zip")
+
+	tmpDir := t.TempDir()
+	config = Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb"), MaxMindEditionID: "test"}
+	licenseKey = "lic"
+
+	// create existing DB file to trigger If-Modified-Since header
+	os.WriteFile(config.GeoIPDBPath, []byte("old"), 0644)
+
+	var headerSeen bool
+	restore := withHTTPMock(roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Header.Get("If-Modified-Since") != "" {
+			headerSeen = true
+		}
+		return &http.Response{StatusCode: http.StatusNotModified, Body: io.NopCloser(bytes.NewReader(nil)), Header: make(http.Header)}, nil
+	}))
+	defer restore()
+
+	DownloadGeoIPDBIfUpdated()
+
+	if !headerSeen {
+		t.Fatalf("If-Modified-Since header not set")
+	}
+
+	if _, err := os.Stat("/tmp/geoip.zip"); !os.IsNotExist(err) {
+		t.Fatalf("zip file should not be created")
+	}
+}
+
+func TestDownloadGeoIPDBIfUpdated_Downloads(t *testing.T) {
+	os.Remove("/tmp/geoip.zip")
+
+	tmpDir := t.TempDir()
+	config = Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb"), MaxMindEditionID: "test"}
+	licenseKey = "lic"
+
+	mmdbContent := []byte("dummydb")
+	restore := withHTTPMock(roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		buf := new(bytes.Buffer)
+		zw := zip.NewWriter(buf)
+		w, _ := zw.Create("GeoLite2-Country.mmdb")
+		w.Write(mmdbContent)
+		zw.Close()
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader(buf.Bytes())), Header: make(http.Header)}, nil
+	}))
+	defer restore()
+
+	DownloadGeoIPDBIfUpdated()
+
+	data, err := os.ReadFile(config.GeoIPDBPath)
+	if err != nil {
+		t.Fatalf("DB file not written: %v", err)
+	}
+	if !bytes.Equal(data, mmdbContent) {
+		t.Fatalf("DB content mismatch")
+	}
+}
+
+func TestExtractAndSwapDB_NoMMDB(t *testing.T) {
+	tmpDir := t.TempDir()
+	config = Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb")}
+
+	zipPath := filepath.Join(tmpDir, "test.zip")
+	buf, _ := os.Create(zipPath)
+	zw := zip.NewWriter(buf)
+	zw.Create("notdb.txt")
+	zw.Close()
+	buf.Close()
+
+	extractAndSwapDB(zipPath)
+
+	if _, err := os.Stat(config.GeoIPDBPath); !os.IsNotExist(err) {
+		t.Fatalf("DB file should not exist")
+	}
+}
