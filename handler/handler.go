@@ -53,8 +53,10 @@ func Authz(cfg config.Config) http.HandlerFunc {
 func extractClientIP(r *http.Request) string {
 	forwarded := r.Header.Get("X-Forwarded-For")
 	if forwarded != "" {
-		parts := strings.Split(forwarded, ",")
-		return strings.TrimSpace(parts[0])
+		if idx := strings.IndexByte(forwarded, ','); idx != -1 {
+			forwarded = forwarded[:idx]
+		}
+		return strings.TrimSpace(forwarded)
 	}
 	host, _, _ := net.SplitHostPort(r.RemoteAddr)
 	return host
