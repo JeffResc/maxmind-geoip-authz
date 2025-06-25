@@ -1,0 +1,39 @@
+name: Go Test
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run tests with coverage
+        run: go test ./... -covermode=atomic -coverprofile=coverage.out
+
+      - name: Generate coverage summary
+        run: |
+          go tool cover -func=coverage.out | tee coverage.txt
+          cat coverage.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Generate HTML report
+        run: go tool cover -html=coverage.out -o coverage.html
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.out
+            coverage.txt
+            coverage.html
+
