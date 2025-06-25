@@ -75,6 +75,44 @@ func TestLoadConfigInvalidMode(t *testing.T) {
 	}
 }
 
+func TestLoadConfigReadError(t *testing.T) {
+	if os.Getenv("TEST_FATAL_READ") == "1" {
+		LoadConfig("/nonexistent/file.yaml")
+		return
+	}
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestLoadConfigReadError")
+	cmd.Env = append(os.Environ(), "TEST_FATAL_READ=1")
+	err := cmd.Run()
+	if err == nil {
+		t.Fatalf("expected failure")
+	}
+	if _, ok := err.(*exec.ExitError); !ok {
+		t.Fatalf("expected exit error, got %v", err)
+	}
+}
+
+func TestLoadConfigBadYAML(t *testing.T) {
+	if os.Getenv("TEST_FATAL_YAML") == "1" {
+		tmp, _ := ioutil.TempFile("", "bad*.yaml")
+		tmp.WriteString(":")
+		tmp.Close()
+		defer os.Remove(tmp.Name())
+		LoadConfig(tmp.Name())
+		return
+	}
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestLoadConfigBadYAML")
+	cmd.Env = append(os.Environ(), "TEST_FATAL_YAML=1")
+	err := cmd.Run()
+	if err == nil {
+		t.Fatalf("expected failure")
+	}
+	if _, ok := err.(*exec.ExitError); !ok {
+		t.Fatalf("expected exit error, got %v", err)
+	}
+}
+
 func TestLoadMaxMindCredentialsValid(t *testing.T) {
 	acc, err := ioutil.TempFile("", "acc")
 	if err != nil {
@@ -105,6 +143,31 @@ func TestLoadMaxMindCredentialsMissing(t *testing.T) {
 
 	cmd := exec.Command(os.Args[0], "-test.run=TestLoadMaxMindCredentialsMissing")
 	cmd.Env = append(os.Environ(), "TEST_FATAL_CRED=1")
+	err := cmd.Run()
+	if err == nil {
+		t.Fatalf("expected failure")
+	}
+	if _, ok := err.(*exec.ExitError); !ok {
+		t.Fatalf("expected exit error, got %v", err)
+	}
+}
+
+func TestLoadMaxMindCredentialsEmpty(t *testing.T) {
+	if os.Getenv("TEST_FATAL_EMPTY") == "1" {
+		acc, _ := ioutil.TempFile("", "acc")
+		lic, _ := ioutil.TempFile("", "lic")
+		acc.WriteString(" \n")
+		lic.WriteString(" \n")
+		acc.Close()
+		lic.Close()
+		defer os.Remove(acc.Name())
+		defer os.Remove(lic.Name())
+		LoadMaxMindCredentials(acc.Name(), lic.Name())
+		return
+	}
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestLoadMaxMindCredentialsEmpty")
+	cmd.Env = append(os.Environ(), "TEST_FATAL_EMPTY=1")
 	err := cmd.Run()
 	if err == nil {
 		t.Fatalf("expected failure")

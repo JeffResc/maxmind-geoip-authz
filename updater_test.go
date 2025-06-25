@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 // helper RoundTripper to mock HTTP responses
@@ -97,5 +98,31 @@ func TestExtractAndSwapDB_NoMMDB(t *testing.T) {
 
 	if _, err := os.Stat(config.GeoIPDBPath); !os.IsNotExist(err) {
 		t.Fatalf("DB file should not exist")
+	}
+}
+
+func TestPeriodicUpdater(t *testing.T) {
+	calls := 0
+	downloadGeoIPDBIfUpdated = func() { calls++ }
+	defer func() { downloadGeoIPDBIfUpdated = DownloadGeoIPDBIfUpdated }()
+
+	ch := make(chan time.Time)
+	tickerFactory = func(d time.Duration) <-chan time.Time { return ch }
+	defer func() { tickerFactory = func(d time.Duration) <-chan time.Time { return time.NewTicker(d).C } }()
+
+	done := make(chan struct{})
+	go func() { PeriodicUpdater(); close(done) }()
+
+	ch <- time.Now()
+	close(ch)
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("PeriodicUpdater did not exit")
+	}
+
+	if calls != 1 {
+		t.Fatalf("expected 1 call, got %d", calls)
 	}
 }
