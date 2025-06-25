@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/jeffresc/maxmind-geoip-authz/geoip"
 	"github.com/oschwald/geoip2-golang"
@@ -15,31 +16,67 @@ import (
 
 func downloadGeoIPDBIfUpdated() {
 	url := fmt.Sprintf(
-		"https://download.maxmind.com/app/geoip_download?edition_id=%s&license_key=%s&suffix=zip",
-		config.MaxMindEditionID, licenseKey,
+		"https://download.maxmind.com/geoip/databases/%s/download?suffix=zip",
+		config.MaxMindEditionID,
 	)
 
-	tmpFile := "/tmp/geoip.zip"
-	req, _ := http.NewRequest("GET", url, nil)
-
+	// Determine modification time of local DB
+	var localMod time.Time
 	if fi, err := os.Stat(config.GeoIPDBPath); err == nil {
-		req.Header.Set("If-Modified-Since", fi.ModTime().UTC().Format(http.TimeFormat))
+		localMod = fi.ModTime()
 	}
 
+	// Check remote modification time using HEAD
+	req, _ := http.NewRequest("HEAD", url, nil)
+	req.SetBasicAuth(accountID, licenseKey)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return
 	}
-	if resp.StatusCode == http.StatusNotModified {
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		if config.Debug {
+			log.Printf("Unexpected status checking GeoIP DB: %s", resp.Status)
+		}
+		return
+	}
+
+	var remoteMod time.Time
+	if lm := resp.Header.Get("Last-Modified"); lm != "" {
+		if t, err := http.ParseTime(lm); err == nil {
+			remoteMod = t
+		}
+	}
+	if !remoteMod.IsZero() && !remoteMod.After(localMod) {
 		if config.Debug {
 			log.Printf("GeoIP DB is up to date")
 		}
-		resp.Body.Close()
+		return
+	}
+
+	// Download new database
+	tmpFile := "/tmp/geoip.zip"
+	req, _ = http.NewRequest("GET", url, nil)
+	req.SetBasicAuth(accountID, licenseKey)
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		if config.Debug {
+			log.Printf("Download failed: %s", resp.Status)
+		}
+		return
+	}
 
-	out, _ := os.Create(tmpFile)
+	out, err := os.Create(tmpFile)
+	if err != nil {
+		if config.Debug {
+			log.Printf("Failed to create temp file: %v", err)
+		}
+		return
+	}
 	io.Copy(out, resp.Body)
 	out.Close()
 

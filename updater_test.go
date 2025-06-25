@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	cfg "github.com/jeffresc/maxmind-geoip-authz/config"
 )
@@ -36,27 +37,31 @@ func TestDownloadGeoIPDBIfUpdated_NoUpdate(t *testing.T) {
 
 	tmpDir := t.TempDir()
 	config = cfg.Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb"), MaxMindEditionID: "test"}
+	accountID = "acc"
 	licenseKey = "lic"
 
-	// create existing DB file to trigger If-Modified-Since header
+	// create existing DB file
 	os.WriteFile(config.GeoIPDBPath, []byte("old"), 0644)
+	fi, _ := os.Stat(config.GeoIPDBPath)
 
-	var headerSeen bool
+	var headerSeen, authSeen bool
 	closed := false
 	restore := withHTTPMock(roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		if req.Header.Get("If-Modified-Since") != "" {
-			headerSeen = true
+		headerSeen = req.Method == "HEAD"
+		if req.Header.Get("Authorization") != "" {
+			authSeen = true
 		}
-		return &http.Response{StatusCode: http.StatusNotModified, Body: testBody{closed: &closed}, Header: make(http.Header)}, nil
+		h := make(http.Header)
+		h.Set("Last-Modified", fi.ModTime().UTC().Format(http.TimeFormat))
+		return &http.Response{StatusCode: http.StatusOK, Body: testBody{closed: &closed}, Header: h}, nil
 	}))
 	defer restore()
 
 	downloadGeoIPDBIfUpdated()
 
-	if !headerSeen {
-		t.Fatalf("If-Modified-Since header not set")
+	if !headerSeen || !authSeen {
+		t.Fatalf("headers not set")
 	}
-
 	if _, err := os.Stat("/tmp/geoip.zip"); !os.IsNotExist(err) {
 		t.Fatalf("zip file should not be created")
 	}
@@ -70,16 +75,32 @@ func TestDownloadGeoIPDBIfUpdated_Downloads(t *testing.T) {
 
 	tmpDir := t.TempDir()
 	config = cfg.Config{GeoIPDBPath: filepath.Join(tmpDir, "db.mmdb"), MaxMindEditionID: "test"}
+	accountID = "acc"
 	licenseKey = "lic"
 
 	mmdbContent := []byte("dummydb")
+	call := 0
 	restore := withHTTPMock(roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		buf := new(bytes.Buffer)
-		zw := zip.NewWriter(buf)
-		w, _ := zw.Create("GeoLite2-Country.mmdb")
-		w.Write(mmdbContent)
-		zw.Close()
-		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader(buf.Bytes())), Header: make(http.Header)}, nil
+		call++
+		if req.Header.Get("Authorization") == "" {
+			t.Fatalf("missing auth header")
+		}
+		if call == 1 {
+			h := make(http.Header)
+			h.Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
+			return &http.Response{StatusCode: http.StatusOK, Body: http.NoBody, Header: h}, nil
+		}
+
+		if call == 2 {
+			buf := new(bytes.Buffer)
+			zw := zip.NewWriter(buf)
+			w, _ := zw.Create("GeoLite2-Country.mmdb")
+			w.Write(mmdbContent)
+			zw.Close()
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewReader(buf.Bytes())), Header: make(http.Header)}, nil
+		}
+		t.Fatalf("unexpected request")
+		return nil, nil
 	}))
 	defer restore()
 
