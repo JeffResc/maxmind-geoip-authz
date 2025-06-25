@@ -28,7 +28,7 @@ countries:
 block_private_ips: true
 geoip_db_path: "/app/GeoLite2-Country.mmdb"
 listen_addr: ":8080"
-debug: true
+debug: false
 ```
 
 - **mode** – `allowlist` or `blocklist` to control how the `countries` list is
