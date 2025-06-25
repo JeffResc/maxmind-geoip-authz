@@ -32,6 +32,9 @@ func init() {
 		"172.16.0.0/12",
 		"192.168.0.0/16",
 		"127.0.0.0/8",
+		"::1/128",
+		"fc00::/7",
+		"fe80::/10",
 	}
 	for _, block := range blocks {
 		_, cidr, err := net.ParseCIDR(block)
