@@ -17,7 +17,6 @@ import (
 var (
 	openGeoDBFn    = geoip.Open
 	listenAndServe = http.ListenAndServe
-	config         cfg.Config
 )
 
 type Viper struct {
@@ -59,7 +58,7 @@ func loadConfig(path string) cfg.Config {
 // run initializes resources and starts the HTTP server. It is separated from
 // main so tests can exercise the startup logic without exiting the process.
 func serve() error {
-	config = loadConfig("config.yaml")
+	config := loadConfig("config.yaml")
 
 	var err error
 	geoip.DB, err = openGeoDBFn(config.GeoIPDBPath)
