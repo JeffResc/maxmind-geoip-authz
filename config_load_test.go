@@ -13,7 +13,7 @@ mode: allowlist
 countries:
   - US
   - CA
-block_private_ips: true
+allow_private_ips: false
 unknown_action: deny
 geoip_db_path: /path/to/db
 listen_addr: :8080
@@ -32,7 +32,7 @@ debug: true
 	}
 
 	c := loadConfig(tmp.Name())
-	if c.Mode != "allowlist" || !c.BlockPrivateIPs || c.ListenAddr != ":8080" {
+	if c.Mode != "allowlist" || c.AllowPrivateIPs || c.ListenAddr != ":8080" {
 		t.Fatalf("unexpected config: %#v", c)
 	}
 	if len(c.Countries) != 2 || c.Countries[0] != "US" || c.Countries[1] != "CA" {
