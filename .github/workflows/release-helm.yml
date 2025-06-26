@@ -33,4 +33,4 @@ jobs:
 
       - name: Push Helm chart to GHCR
         run: |
-          helm push maxmind-geoip-authz-${VERSION}.tgz oci://ghcr.io/${REPO_NAME}
+          helm push maxmind-geoip-authz-${VERSION}.tgz oci://ghcr.io/${REPO_NAME}/charts
