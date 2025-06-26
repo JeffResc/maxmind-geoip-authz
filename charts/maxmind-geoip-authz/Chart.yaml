@@ -1,0 +1,10 @@
+apiVersion: v2
+name: maxmind-geoip-authz
+description: Helm chart for maxmind-geoip-authz service
+
+# This chart is an application chart.
+type: application
+
+# These will be overriden at release time to the current version
+version: 0.0.0
+appVersion: "0.0.0"

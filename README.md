@@ -68,3 +68,21 @@ Unit tests can be executed with the standard Go tooling:
 go test ./...
 ```
 
+## Helm Chart
+
+This repository includes a Helm chart under `charts/maxmind-geoip-authz`. The
+chart can optionally deploy a `geoipupdate` StatefulSet to keep the GeoIP
+database current. The update container behavior is controlled with the
+following values:
+
+- `geoipupdate.editionIDs` &ndash; list of editions to download. Defaults to
+  `GeoLite2-Country`.
+- `geoipupdate.frequency` &ndash; update check frequency in hours. Defaults to
+  `72`.
+- `geoipupdate.dbDir` &ndash; directory where databases are written. Defaults to
+  `geoipDatabase.mountPath`.
+- `geoipupdate.extraEnv` &ndash; list of additional environment variables passed to
+  the `geoipupdate` container.
+- `geoipDatabase.dbFilename` &ndash; database filename. If unset, it defaults to
+  `{geoipupdate.editionIDs}.mmdb`.
+

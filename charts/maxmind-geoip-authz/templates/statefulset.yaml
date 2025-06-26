@@ -1,0 +1,54 @@
+{{- if .Values.geoipupdate.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "maxmind-geoip-authz.fullname" . }}-geoipupdate
+  labels:
+    {{- include "maxmind-geoip-authz.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "maxmind-geoip-authz.fullname" . }}-geoipupdate
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "maxmind-geoip-authz.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "maxmind-geoip-authz.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: geoipupdate
+          image: "{{ .Values.geoipupdate.image.repository }}:{{ .Values.geoipupdate.image.tag }}"
+          imagePullPolicy: {{ .Values.geoipupdate.image.pullPolicy }}
+          env:
+            - name: GEOIPUPDATE_ACCOUNT_ID_FILE
+              value: /credentials/accountID
+            - name: GEOIPUPDATE_LICENSE_KEY_FILE
+              value: /credentials/licenseKey
+            - name: GEOIPUPDATE_EDITION_IDS
+              value: {{ .Values.geoipupdate.editionIDs | quote }}
+            - name: GEOIPUPDATE_FREQUENCY
+              value: {{ .Values.geoipupdate.frequency | quote }}
+            - name: GEOIPUPDATE_DB_DIR
+              value: {{ default .Values.geoipDatabase.mountPath .Values.geoipupdate.dbDir | quote }}
+          {{- with .Values.geoipupdate.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: geoip-db
+              mountPath: {{ .Values.geoipDatabase.mountPath }}
+            {{- if .Values.geoipupdate.credentials.existingSecret }}
+            - name: credentials
+              mountPath: /credentials
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: geoip-db
+          persistentVolumeClaim:
+            claimName: {{ default (include "maxmind-geoip-authz.fullname" .) .Values.geoipDatabase.pvc.existingClaim }}
+        {{- if .Values.geoipupdate.credentials.existingSecret }}
+        - name: credentials
+          secret:
+            secretName: {{ .Values.geoipupdate.credentials.existingSecret }}
+        {{- end }}
+{{- end }}

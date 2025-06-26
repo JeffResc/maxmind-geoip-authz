@@ -1,0 +1,15 @@
+name: Helm Template
+
+on:
+  pull_request:
+
+jobs:
+  helm-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Render Helm chart
+        run: |
+          helm template charts/maxmind-geoip-authz > /dev/null
