@@ -25,6 +25,12 @@ spec:
               value: /credentials/accountID
             - name: GEOIPUPDATE_LICENSE_KEY_FILE
               value: /credentials/licenseKey
+            - name: GEOIPUPDATE_EDITION_IDS
+              value: {{ .Values.geoipupdate.editionIDs | quote }}
+            - name: GEOIPUPDATE_FREQUENCY
+              value: {{ .Values.geoipupdate.frequency | quote }}
+            - name: GEOIPUPDATE_DB_DIR
+              value: {{ default .Values.geoipDatabase.mountPath .Values.geoipupdate.dbDir | quote }}
           volumeMounts:
             - name: geoip-db
               mountPath: {{ .Values.geoipDatabase.mountPath }}
