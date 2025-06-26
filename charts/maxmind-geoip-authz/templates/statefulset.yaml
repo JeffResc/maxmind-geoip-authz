@@ -31,6 +31,9 @@ spec:
               value: {{ .Values.geoipupdate.frequency | quote }}
             - name: GEOIPUPDATE_DB_DIR
               value: {{ default .Values.geoipDatabase.mountPath .Values.geoipupdate.dbDir | quote }}
+          {{- with .Values.geoipupdate.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: geoip-db
               mountPath: {{ .Values.geoipDatabase.mountPath }}

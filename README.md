@@ -81,6 +81,8 @@ following values:
   `72`.
 - `geoipupdate.dbDir` &ndash; directory where databases are written. Defaults to
   `geoipDatabase.mountPath`.
+- `geoipupdate.extraEnv` &ndash; list of additional environment variables passed to
+  the `geoipupdate` container.
 - `geoipDatabase.dbFilename` &ndash; database filename. If unset, it defaults to
   `{geoipupdate.editionIDs}.mmdb`.
 
