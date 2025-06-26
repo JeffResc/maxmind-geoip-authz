@@ -68,7 +68,7 @@ config:
 
 geoipDatabase:
   mountPath: /data
-  dbFilename: GeoLite2-Country.mmdb
+  dbFilename: ""
   pvc:
     existingClaim: ""
     storageClassName: ""
@@ -80,6 +80,9 @@ geoipupdate:
   enabled: false
   runOnInstall: false
   schedule: "0 0 * * *"
+  editionIDs: GeoLite2-Country
+  frequency: 72
+  dbDir: ""
   image:
     repository: ghcr.io/maxmind/geoipupdate
     tag: v7.1.0

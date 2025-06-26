@@ -13,7 +13,8 @@ data:
     {{- end }}
     private_ip_action: {{ .Values.config.private_ip_action }}
     unknown_action: {{ .Values.config.unknown_action }}
-    {{- $db := .Values.config.geoip_db_path | default (printf "%s/%s" .Values.geoipDatabase.mountPath .Values.geoipDatabase.dbFilename) }}
+    {{- $dbFilename := .Values.geoipDatabase.dbFilename | default (printf "%s.mmdb" .Values.geoipupdate.editionIDs) }}
+    {{- $db := .Values.config.geoip_db_path | default (printf "%s/%s" .Values.geoipDatabase.mountPath $dbFilename) }}
     geoip_db_path: {{ $db | quote }}
     listen_addr: {{ .Values.config.listen_addr | quote }}
     debug: {{ .Values.config.debug }}
