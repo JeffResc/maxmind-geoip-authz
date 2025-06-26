@@ -5,5 +5,9 @@ description: Helm chart for maxmind-geoip-authz service
 # This chart is an application chart.
 type: application
 
+<<<<<<< codex/allow-environment-variables-in-statefulset
+=======
+# These will be overriden at release time to the current version
+>>>>>>> codex/create-customizable-helm-chart-with-deployment-and-cronjob
 version: 0.0.0
 appVersion: "0.0.0"
